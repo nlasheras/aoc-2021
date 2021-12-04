@@ -1,5 +1,8 @@
 #https://adventofcode.com/2021/day/3
 
+import math
+from copy import deepcopy
+
 def part1_calculate_gamma(inputs, bit_length):
     gamma_sum = [0] * bit_length
     for number in inputs:
@@ -8,7 +11,7 @@ def part1_calculate_gamma(inputs, bit_length):
 
     n = len(inputs)
     gamma = 0
-    for i, sum in filter(lambda x: x[1] >= n/2, enumerate(gamma_sum)):
+    for i, sum in filter(lambda x: x[1] > int(n/2), enumerate(gamma_sum)):
         gamma += 1 << (bit_length - i - 1)
 
     return gamma
@@ -21,25 +24,32 @@ def part1_calculate_epsilon(gamma, bit_length):
 def match_gamma(value, gamma, gamma_mask):
     return not (value & gamma_mask) ^ (gamma & gamma_mask)
 
-def part2_calculate_oxygen(inputs, bit_length, bit):
-    inverse_bit = 0 if bit == 1 else 1
+def part2_calculate_oxygen(inputs, bit_length, most_common):
     gamma = 0
     gamma_mask = 0
-    for i in range(bit_length):
-        matching_lines = [n for n in inputs if match_gamma(n, gamma, gamma_mask)]
-        if (len(matching_lines) == 1): 
-            return matching_lines[0]
-        elif (len(matching_lines) == 2):
-             return matching_lines[0] if matching_lines[0] & gamma_mask == bit else matching_lines[1]
+    for i in range(bit_length-1, -1, -1):
+        if gamma_mask != 0:
+            matching_lines = [n for n in matching_lines if match_gamma(n, gamma, gamma_mask)]
+        else:
+            matching_lines = inputs # saving one listcomp
+        
+        n = len(matching_lines)
+        bit_mask = 1 << i
+        count_ones = sum([1 if n & bit_mask else 0 for n in matching_lines])
+        count_zeros = n - count_ones
 
-        gamma_sum = 0
-        for number in matching_lines:
-            gamma_sum += 1 if number & (1 << (bit_length - i - 1)) else 0
+        if most_common:
+            gamma_bit = 1 if count_ones >= count_zeros else 0
+        else:
+            gamma_bit = 0 if count_zeros <= count_ones else 1 
 
-        gamma_bit = bit if gamma_sum >= int((len(matching_lines)+1)/2) else inverse_bit
-        gamma = gamma | (gamma_bit << (bit_length - i - 1))
-        gamma_mask = gamma_mask | (1 << (bit_length - i - 1))
+        if (n == 1): # stop when only 1 number finishes
+            return matching_lines[0] 
+        elif (n == 2): 
+            return matching_lines[0] if matching_lines[0] & gamma_mask == gamma_bit else matching_lines[1]
 
+        gamma = gamma | (gamma_bit << i)
+        gamma_mask = gamma_mask | bit_mask
     
     # not defined in the problem
     return gamma
@@ -65,8 +75,8 @@ def main(input_file):
     print("epsilon rate: {0} ({1})".format(bin(epsilon), epsilon))
     print("What is the power consumption of the submarine?: {0}".format(gamma*epsilon))
 
-    oxigen = part2_calculate_oxygen(bits, bit_length, 1)
-    co2 = part2_calculate_oxygen(bits, bit_length, 0)
+    oxigen = part2_calculate_oxygen(bits, bit_length, True)
+    co2 = part2_calculate_oxygen(bits, bit_length, False)
 
     print("oxigen generator rating: {0} ({1})".format(bin(oxigen), oxigen))
     print("CO2 scrubber rating: {0} ({1})".format(bin(co2), co2))
@@ -90,11 +100,11 @@ if "unittest" in sys.argv:
             self.assertEqual(bin(epsilon), "0b1001")
 
         def test_oxigen(self):
-            oxigen = part2_calculate_oxygen(self.bits, self.bit_length, 1)
+            oxigen = part2_calculate_oxygen(self.bits, self.bit_length, True)
             self.assertEqual(bin(oxigen), "0b10111")
 
         def test_co2(self):
-            co2 =   part2_calculate_oxygen(self.bits, self.bit_length, 0)
+            co2 =   part2_calculate_oxygen(self.bits, self.bit_length, False)
             self.assertEqual(bin(co2), "0b1010")
 
     unittest.main()
