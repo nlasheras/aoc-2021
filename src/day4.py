@@ -23,10 +23,10 @@ def parse_boards(lines):
     return bingo_boards
 
 def bingo_mark(number, bingo_board):
-    for i, n in enumerate(bingo_board):
-        if n == number:
-            bingo_board[i] = -1
-            return i
+    if number in bingo_board:
+        i = bingo_board.index(number)
+        bingo_board[i] = -1
+        return i
     return -1
 
 def bingo_check(bingo_board):
