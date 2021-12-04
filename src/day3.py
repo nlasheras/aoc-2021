@@ -7,8 +7,16 @@ def part1_calculate_gamma(inputs, bit_length):
             gamma_sum[i] += 1 if number & (1 << (bit_length - i - 1)) else 0
 
     n = len(inputs)
-    gamma = "".join(['1' if sum > n/2 else '0' for sum in gamma_sum])
+    gamma = 0
+    for i, sum in filter(lambda x: x[1] >= n/2, enumerate(gamma_sum)):
+        gamma += 1 << (bit_length - i - 1)
+
     return gamma
+
+def part1_calculate_epsilon(gamma, bit_length):
+    # since epsilon is using the least common bits you can get it negating gamma
+    bit_mask = int("1" * bit_length, 2)
+    return bit_mask & ~gamma
 
 def match_gamma(value, gamma, gamma_mask):
     return not (value & gamma_mask) ^ (gamma & gamma_mask)
@@ -50,15 +58,11 @@ def read_input(input_file):
 def main(input_file):
     bits, bit_length = read_input(input_file)
 
-    gamma_str = part1_calculate_gamma(bits, bit_length)
-    # since epsilon is using the least common bits you can get it negating gamma
-    epsilon_str = "".join(['1' if c == '0' else '0' for c in gamma_str])
+    gamma = part1_calculate_gamma(bits, bit_length)
+    epsilon = part1_calculate_epsilon(gamma, bit_length)
 
-    epsilon = int(epsilon_str, 2)
-    gamma = int(gamma_str, 2)
-
-    print("gamma rate: {0} ({1})".format(gamma_str, gamma))
-    print("epsilon rate: {0} ({1})".format(epsilon_str, epsilon))
+    print("gamma rate: {0} ({1})".format(bin(gamma), gamma))
+    print("epsilon rate: {0} ({1})".format(bin(epsilon), epsilon))
     print("What is the power consumption of the submarine?: {0}".format(gamma*epsilon))
 
     oxigen = part2_calculate_oxygen(bits, bit_length, 1)
@@ -79,9 +83,11 @@ if "unittest" in sys.argv:
         def setUp(self):
             self.bits, self.bit_length = read_input("input3_test.txt")
 
-        def test_gamma_str(self):
-            gamma_str = part1_calculate_gamma(self.bits, self.bit_length)
-            self.assertEqual(gamma_str, "10110")
+        def test_gamma(self):
+            gamma = part1_calculate_gamma(self.bits, self.bit_length)
+            self.assertEqual(bin(gamma), "0b10110")
+            epsilon = part1_calculate_epsilon(gamma, self.bit_length)
+            self.assertEqual(bin(epsilon), "0b1001")
 
         def test_oxigen(self):
             oxigen = part2_calculate_oxygen(self.bits, self.bit_length, 1)
