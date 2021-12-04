@@ -1,9 +1,5 @@
 #https://adventofcode.com/2021/day/3
 
-import sys
-
-input_file = sys.argv[1]
-
 def part1_calculate_gamma(inputs, bit_length):
     gamma_sum = [0] * bit_length
     for number in inputs:
@@ -40,12 +36,19 @@ def part2_calculate_oxygen(inputs, bit_length, bit):
     # not defined in the problem
     return gamma
 
-with open(input_file, newline='',encoding='utf-8') as file:
 
-    lines = file.readlines()
+def read_input(input_file):
+    with open(input_file, newline='',encoding='utf-8') as file:
+        lines = file.readlines()
+        
+        bit_length = len(lines[0].rstrip())
+        bits = [int(l, 2) for l in lines]
+        return bits, bit_length
     
-    bit_length = len(lines[0].rstrip())
-    bits = [int(l, 2) for l in lines]
+    return [], 0
+
+def main(input_file):
+    bits, bit_length = read_input(input_file)
 
     gamma_str = part1_calculate_gamma(bits, bit_length)
     # since epsilon is using the least common bits you can get it negating gamma
@@ -65,3 +68,33 @@ with open(input_file, newline='',encoding='utf-8') as file:
     print("CO2 scrubber rating: {0} ({1})".format(bin(co2), co2))
     print("What is the life support rating of the submarine?: {0}".format(oxigen*co2))
 
+
+import sys
+
+if "unittest" in sys.argv:
+    sys.argv.remove("unittest")
+
+    import unittest
+    class BinaryDiagnosticTest(unittest.TestCase):
+        def setUp(self):
+            self.bits, self.bit_length = read_input("input3_test.txt")
+
+        def test_gamma_str(self):
+            gamma_str = part1_calculate_gamma(self.bits, self.bit_length)
+            self.assertEqual(gamma_str, "10110")
+
+        def test_oxigen(self):
+            oxigen = part2_calculate_oxygen(self.bits, self.bit_length, 1)
+            self.assertEqual(bin(oxigen), "0b10111")
+
+        def test_co2(self):
+            co2 =   part2_calculate_oxygen(self.bits, self.bit_length, 0)
+            self.assertEqual(bin(co2), "0b1010")
+
+    unittest.main()
+
+
+if __name__ == '__main__':
+    input_file = sys.argv[1] if len(sys.argv) > 1 else "input3.txt"
+    # expected solutions 3429254, 5410338
+    main(input_file)
