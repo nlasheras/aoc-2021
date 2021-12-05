@@ -18,3 +18,8 @@ First version using strings. My solution can be changed to operate with bits but
 ### Day 4 
 
 I had a bit of time today to play around with the solution. My first solution was working well enough for the input, but playing around with `cProfile` I noticed that most of the calls were on the `bingo_check` function. I optimized to only check changed bingos and god rid of half of the calls. Then I stumbled with another good optimization. I can only check the row and column that were marked. 
+
+### Day 5
+
+For todays solution I opted for implementing a `Point` class since it was much easier to write a line renderer with a bit of vector math. My renderer implementation worked without a change for part 2. I used a bit of time playing around with functional library. 
+ 
