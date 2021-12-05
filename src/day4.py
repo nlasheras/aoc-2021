@@ -30,6 +30,7 @@ def bingo_mark(number, bingo_board):
     return -1
 
 def bingo_check(bingo_board):
+    # check the if the amount of marked (-1) cells is equal to the bingo size for all rows and columns
     for i in range(BINGO_SIZE):
         if sum([1 if bingo_board[n*BINGO_SIZE + i]  == -1 else 0 for n in range(BINGO_SIZE)]) >= BINGO_SIZE:
             return True
@@ -40,7 +41,7 @@ def bingo_check(bingo_board):
 def bingo_check_fast(bingo_board, idx):
     # optimized version that only checks the row and colum of a given index
     row = int(idx / BINGO_SIZE)
-    col = idx - row * BINGO_SIZE
+    col = idx % BINGO_SIZE
     if sum([1 if bingo_board[n*BINGO_SIZE + col]  == -1 else 0 for n in range(BINGO_SIZE)]) >= BINGO_SIZE:
         return True
     if sum([1 if bingo_board[row*BINGO_SIZE + n]  == -1 else 0 for n in range(BINGO_SIZE)]) >= BINGO_SIZE:
@@ -48,7 +49,7 @@ def bingo_check_fast(bingo_board, idx):
     return False
 
 def bingo_score(bingo_board):
-    return sum([n if n != -1 else 0 for n in bingo_board])
+    return sum([n for n in bingo_board if n != -1])
        
 def part1_play_bingo(numbers, bingo_boards):
     for draw in numbers:
@@ -85,10 +86,10 @@ def main(input_file):
         bingo_boards = parse_boards(lines[2:])
 
         score = part1_play_bingo(numbers, deepcopy(bingo_boards))
-        print("What will your final score be if you choose that board? {0}".format(score))
+        print(f"What will your final score be if you choose that board? {score}")
         
         losing_score = part2_lose_bingo(numbers, deepcopy(bingo_boards))
-        print("Once final board wins, what would its final score be? {0}".format(losing_score))
+        print(f"Once final board wins, what would its final score be? {losing_score}")
 
 
 input_file = sys.argv[1] if len(sys.argv) > 1 else "input4.txt"
