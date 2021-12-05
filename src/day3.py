@@ -1,8 +1,5 @@
 #https://adventofcode.com/2021/day/3
 
-import math
-from copy import deepcopy
-
 def part1_calculate_gamma(inputs, bit_length):
     gamma_sum = [0] * bit_length
     for number in inputs:
@@ -84,32 +81,6 @@ def main(input_file):
 
 
 import sys
-
-if "unittest" in sys.argv:
-    sys.argv.remove("unittest")
-
-    import unittest
-    class BinaryDiagnosticTest(unittest.TestCase):
-        def setUp(self):
-            self.bits, self.bit_length = read_input("input3_test.txt")
-
-        def test_gamma(self):
-            gamma = part1_calculate_gamma(self.bits, self.bit_length)
-            self.assertEqual(bin(gamma), "0b10110")
-            epsilon = part1_calculate_epsilon(gamma, self.bit_length)
-            self.assertEqual(bin(epsilon), "0b1001")
-
-        def test_oxigen(self):
-            oxigen = part2_calculate_oxygen(self.bits, self.bit_length, True)
-            self.assertEqual(bin(oxigen), "0b10111")
-
-        def test_co2(self):
-            co2 =   part2_calculate_oxygen(self.bits, self.bit_length, False)
-            self.assertEqual(bin(co2), "0b1010")
-
-    unittest.main()
-
-
 if __name__ == '__main__':
     input_file = sys.argv[1] if len(sys.argv) > 1 else "input3.txt"
     # expected solutions 3429254, 5410338
