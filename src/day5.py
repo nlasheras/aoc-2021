@@ -12,6 +12,9 @@ class Point:
         self.x = x
         self.y = y
 
+    def __repr__(self):
+        return f"Point({self.x}, {self.y})"
+
     def normalized(self):
         def _normalize(x):
             abs = x if x >= 0 else -x
@@ -32,6 +35,7 @@ class Point:
     
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
+    
 
 def read_input(input_file):
     with open(input_file, newline='',encoding='utf-8') as file:
@@ -56,13 +60,13 @@ def render_lines(grid, grid_width, grid_height, lines, include_diagonal = False)
         if not include_diagonal and dir.x != 0 and dir.y != 0:
             continue 
 
-        current = start
+        current = Point(start.x, start.y)
         while (True): 
             idx = current.y*grid_width + current.x
             grid[idx] += 1
-            current += dir
             if (current == end):
                 break
+            current += dir
 
 def render_grid(grid, grid_width, grid_height):
     render = ""
@@ -92,6 +96,7 @@ def main(input_file):
     overlap_count = count_overlaps(lines, max_x+1, max_y+1, True)
     print(f"At how many points do at least two lines overlap (including diagonal)? {overlap_count}")
 
+    print("\n")
 
 input_file = sys.argv[1] if len(sys.argv) > 1 else "input5.txt"
 main("input5_test.txt")
