@@ -26,4 +26,7 @@ For todays solution I opted for implementing a `Point` class since it was much e
 ### Day 6 
 
 After implementing the straightforward solution for the first part, I tried inmediatelly trying to get the second solution using that implementation. In my computer the program started advancing slower around day 180 (where theres is about 35 million fishes). Then I figured there would be a smarter way of simulating the fishes and I think I found the intended way to do it. 
- 
+
+### Day 7
+
+After finishing it and playing with the input data, I got the impression that the brute force solution would have worked also (took around 20secs to compute the costs for all positions for part 2), but anyway I implemented a simple binary search which needs much less calls to the `fuel_cost` function. 
