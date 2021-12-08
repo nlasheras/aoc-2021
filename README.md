@@ -29,4 +29,8 @@ After implementing the straightforward solution for the first part, I tried inme
 
 ### Day 7
 
+After finishing it and playing with the input data, I got the impression that the brute force solution would have worked also (took around 20secs to compute the costs for all positions for part 2), but anyway I implemented a simple binary search which needs much less calls to the `fuel_cost` function. 
+
+### Day 8
+
 Today's was quite fun. First part was pretty straight-forward. Figuring the proper bitwise operations to use was a bit tricky. I was banging my head against them until I figured out my issues: I had an off by one error with the first `mask` function that gave masks shifted 1 bit to the left and, after solving that I realized that I had sketched 9 as `abdef` so my approach wasn't working as I thought. But today's was a great one to practice my bit manipulation skills. 
