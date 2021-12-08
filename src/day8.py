@@ -49,7 +49,7 @@ def deduct_pattern(inputs):
             print(f"{n} not found!")
 
     def match(a, b): return (a^b) & b == 0
-    def nor(m): return (~m & bit_mask)
+    def flip(m): return (~m & bit_mask)
 
     find_and_assign(1, inputs, lambda s: len(s) == 2)
     find_and_assign(8, inputs, lambda s: len(s) == 7)
@@ -57,17 +57,17 @@ def deduct_pattern(inputs):
     find_and_assign(4, inputs, lambda s: len(s) == 4)
     
     len6 = [s for s in inputs if len(s) == 6]
-    seg_a = deducted_masks[7] & nor(deducted_masks[1])
+    seg_a = deducted_masks[7] & flip(deducted_masks[1])
     t9 = deducted_masks[4] | seg_a
     find_and_assign(9, len6, lambda s: match(mask(s), t9))
 
-    t6 = deducted_masks[9] & nor(deducted_masks[7])
+    t6 = deducted_masks[9] & flip(deducted_masks[7])
     find_and_assign(6, len6, lambda s: match(mask(s), t6) and not match(mask(s), t9))
 
     find_and_assign(0, len6, lambda s: not match(mask(s), deducted_masks[6]) and not match(mask(s), deducted_masks[9]))
 
     len5 = [s for s in inputs if len(s) == 5]
-    find_and_assign(2, len5, lambda s: match(mask(s), nor(deducted_masks[9])))
+    find_and_assign(2, len5, lambda s: match(mask(s), flip(deducted_masks[9])))
 
     find_and_assign(5, len5, lambda s: mask(s) | deducted_masks[1] == deducted_masks[9])
     
