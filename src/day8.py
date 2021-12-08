@@ -94,8 +94,67 @@ def part2(filename):
 
     print(f"What do you get if you add up all of the output values? {sum}")
 
+import itertools
+
+def deduct_bf(numbers):
+    inputs = ["".join(sorted(s)) for s in numbers]
+    
+    def not_found(pattern):
+        sp = "".join(sorted(pattern))
+        return not sp in inputs
+
+    for a,b,c,d,e,f,g in itertools.permutations('abcdefg'):
+        if not_found(a+b): continue # 1
+        if not_found(a+b+d): continue # 7
+        if not_found(a+b+e+f): continue # 4
+        if not_found(a+b+c+d+e+f+g): continue # 8
+
+        if not_found(c+a+g+e+d+b): continue # 0
+        if not_found(g+c+d+f+a): continue # 2
+        if not_found(f+b+c+a+d): continue # 3
+        if not_found(c+d+f+b+e): continue # 5
+        if not_found(c+d+f+g+e+b): continue # 6
+        if not_found(c+e+f+a+b+d): continue # 9
+
+        class SignalPattern:
+            def __init__(self, a,b,c,d,e,f,g):
+                self.dict = {}
+
+                def __add_key__(pattern, number):
+                    self.dict["".join(sorted(pattern))] = number
+ 
+                __add_key__(a+b, 1)
+                __add_key__(a+b+d, 7)
+                __add_key__(a+b+e+f, 4)
+                __add_key__(a+b+c+d+e+f+g, 8)
+
+                __add_key__(c+a+g+e+d+b, 0)
+                __add_key__(g+c+d+f+a, 2)
+                __add_key__(f+b+c+a+d, 3)
+                __add_key__(c+d+f+b+e, 5)
+                __add_key__(c+d+f+g+e+b, 6)
+                __add_key__(c+e+f+a+b+d, 9)
+
+            def decode(self, input):
+                digits = [self.dict["".join(sorted(s))] for s in input]
+                return sum(map(lambda x: pow(10, x[0])*x[1], enumerate(reversed(digits))))
+
+        return SignalPattern(a,b,c,d,e,f,g)
+
+        
+def part2_bf(filename):
+    entries = parse_entries(filename)
+    sum = 0
+    for e in entries:
+        d = deduct_bf(e[0] + e[1])
+        output = d.decode(e[1])
+        sum += output
+
+    print(f"What do you get if you add up all of the output values? {sum}")
 
 part1("input8_test.txt")
 part1("input8.txt")
 part2("input8_test.txt")
 part2("input8.txt")
+part2_bf("input8_test.txt")
+part2_bf("input8.txt")

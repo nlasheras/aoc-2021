@@ -34,3 +34,5 @@ After finishing it and playing with the input data, I got the impression that th
 ### Day 8
 
 Today's was quite fun. First part was pretty straight-forward. Figuring the proper bitwise operations to use was a bit tricky. I was banging my head against them until I figured out my issues: I had an off by one error with the first `mask` function that gave masks shifted 1 bit to the left and, after solving that I realized that I had sketched 9 as `abdef` so my approach wasn't working as I thought. But today's was a great one to practice my bit manipulation skills. 
+
+Just for fun, I tried implementing a straight-forward brute force solution. Manages to solve puzzle for my input in less than 1 second.
