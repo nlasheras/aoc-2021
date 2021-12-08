@@ -26,4 +26,7 @@ For todays solution I opted for implementing a `Point` class since it was much e
 ### Day 6 
 
 After implementing the straightforward solution for the first part, I tried inmediatelly trying to get the second solution using that implementation. In my computer the program started advancing slower around day 180 (where theres is about 35 million fishes). Then I figured there would be a smarter way of simulating the fishes and I think I found the intended way to do it. 
- 
+
+### Day 7
+
+Today's was quite fun. First part was pretty straight-forward. Figuring the proper bitwise operations to use was a bit tricky. I was banging my head against them until I figured out my issues: I had an off by one error with the first `mask` function that gave masks shifted 1 bit to the left and, after solving that I realized that I had sketched 9 as `abdef` so my approach wasn't working as I thought. But today's was a great one to practice my bit manipulation skills. 
