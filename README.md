@@ -36,3 +36,7 @@ After finishing it and playing with the input data, I got the impression that th
 Today's was quite fun. First part was pretty straight-forward. Figuring the proper bitwise operations to use was a bit tricky. I was banging my head against them until I figured out my issues: I had an off by one error with the first `mask` function that gave masks shifted 1 bit to the left and, after solving that I realized that I had sketched 9 as `abdef` so my approach wasn't working as I thought. But today's was a great one to practice my bit manipulation skills. 
 
 Just for fun, I tried implementing a straight-forward brute force solution. Manages to solve puzzle for my input in less than 1 second.
+
+### Day 9
+
+I struggled a bit with Part 2. My initial implementation was not reaching all non-9 points in the grid since I was strictly looking for increases of 1. I made the code to handle the case of a higher slope and I got the right answer.
