@@ -34,25 +34,25 @@ def part1(input):
     print(f"What is the sum of the risk levels of all low points on your heightmap? {risk}")
 
 def find_basin(input, lower_point):
-    grid = input[0]
+    def find_basin_neighbors(x, y, value):
+        def test_for_basin(p, height):
+            v = get_value(input, p[0], p[1])
+            return v != None and v < 9 and v > height
 
-    def find_adj(x, y, value):
-        adj = [(x + delta[0], y + delta[1]) for delta in adjacent]
-        equal_adj = [p for p in adj if get_value(input, p[0], p[1]) == value]
-        return equal_adj
+        neighbors = [(x + delta[0], y + delta[1]) for delta in adjacent]
+        return [p for p in neighbors if test_for_basin(p, value)]
 
 
-    def recursive_find(point, value):
-        if (value == 9):
-            return [] # Locations of height 9 do not count as being in any basin
-
-        basin = [(point, value)]
-        adj = find_adj(point[0], point[1], value + 1)
-        for a in adj:
-            basin += [p for p in recursive_find(a, value + 1) if not p in basin]
+    def recursive_find(point, basin):
+        x, y = point
+        value = get_value(input, x, y)
+        adjacent = find_basin_neighbors(x, y, value)
+        basin += [p for p in adjacent if not p in basin]
+        for point in adjacent:
+            basin = recursive_find(point, basin)
         return basin
     
-    basin = recursive_find(lower_point, get_value(input, lower_point[0], lower_point[1]))
+    basin = recursive_find(lower_point, [lower_point])
     return basin
 
 from functools import reduce
