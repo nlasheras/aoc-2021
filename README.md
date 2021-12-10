@@ -40,3 +40,7 @@ Just for fun, I tried implementing a straight-forward brute force solution. Mana
 ### Day 9
 
 I struggled a bit with Part 2. My initial implementation was not reaching all non-9 points in the grid since I was strictly looking for increases of 1. I made the code to handle the case of a higher slope and I got the right answer.
+
+### Day 10
+
+Today was easier than yesterday for me. I spent a bit of time cleaning up generating the `closing_map` using a dictionary comprehension but nothing else special on the solution for today. 
