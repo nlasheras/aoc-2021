@@ -26,10 +26,12 @@ class Grid:
             neighbors = [(-1, -1), (0, -1), (1, -1), (-1, 0), (1, 0), (-1, 1), (0, 1), (1, 1)]
             flashed[idx] = True
             pi = self.get_pos(idx)
-            adj = list(filter(lambda x: x != None, [self.get_idx((pi[0] + delta[0], pi[1] + delta[1])) for delta in neighbors]))
-            for i in adj:
-                if not flashed[i]: 
-                    self.cells[i] += 1 
+            adjacent_indexes = list(filter(lambda x: x != None, 
+                                    [self.get_idx((pi[0] + delta[0], pi[1] + delta[1])) 
+                                        for delta in neighbors]))
+            for adj_i in adjacent_indexes:
+                if not flashed[adj_i]: 
+                    self.cells[adj_i] += 1 
 
         def check_flash_iteration():
             count = 0
