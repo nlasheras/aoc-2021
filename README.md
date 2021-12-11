@@ -44,3 +44,7 @@ I struggled a bit with Part 2. My initial implementation was not reaching all no
 ### Day 10
 
 Today was easier than yesterday for me. I spent a bit of time cleaning up generating the `closing_map` using a dictionary comprehension but nothing else special on the solution for today. 
+
+### Day 11
+
+I spent a bit longer today making a `Grid` class since it seems that many problems need some sort of grid of rows and columns. Understanding the flash logic was a bit tricky but luckily the problem provides good example cases so I could test and find the issues simulating only the first couple of steps. After Step 2 was correct the rest of the problem was easy. 
