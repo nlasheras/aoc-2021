@@ -52,3 +52,7 @@ I spent a bit longer today making a `Grid` class since it seems that many proble
 ### Day 12
 
 Forgot to comment on the log yesterday. Main issue I had was understanding the condition for part 2. My current solution takes ~20 secs in the old laptop so I want to test some optimizations after doing day 13 today. 
+
+### Day 13
+
+I stumbled on a good approach today. Instead of using a grid I just use a `set` to store the dots and just apply a function to transform the dots to the folded positions. 
