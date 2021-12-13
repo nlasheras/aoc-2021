@@ -48,3 +48,7 @@ Today was easier than yesterday for me. I spent a bit of time cleaning up genera
 ### Day 11
 
 I spent a bit longer today making a `Grid` class since it seems that many problems need some sort of grid of rows and columns. Understanding the flash logic was a bit tricky but luckily the problem provides good example cases so I could test and find the issues simulating only the first couple of steps. After Step 2 was correct the rest of the problem was easy. 
+
+### Day 12
+
+Forgot to comment on the log yesterday. Main issue I had was understanding the condition for part 2. My current solution takes ~20 secs in the old laptop so I want to test some optimizations after doing day 13 today. 
