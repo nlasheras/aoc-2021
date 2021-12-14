@@ -56,3 +56,7 @@ Forgot to comment on the log yesterday. Main issue I had was understanding the c
 ### Day 13
 
 I stumbled on a good approach today. Instead of using a grid I just use a `set` to store the dots and just apply a function to transform the dots to the folded positions. 
+
+### Day 14
+
+Today it was one of those days when the straight forward version solution doesn't scale properly. I got the version counting pairs working relatively fast, but then it didn't gave me a correct answer with my input although looking correct. After a lot of debugging I realized that the issue was on initializing the pairs for the input (I didn't account for repeated pairs on the original polymer). 
