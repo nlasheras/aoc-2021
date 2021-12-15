@@ -54,10 +54,16 @@ class Grid:
 from collections import defaultdict
 import math
 from functools import reduce
+from queue import PriorityQueue
 
 def find_path(grid, start, goal):
     # implement A*
-    open_set = set([start])
+
+    # open set is a PriorityQueue ordered by fScore
+    open_set = PriorityQueue()
+    open_set.put((0, start))
+    # we use the closed set to avoid processing nodes multiple times
+    closed_set = set()
 
     came_from = {} # empty map
 
@@ -73,10 +79,13 @@ def find_path(grid, start, goal):
     fScore = defaultdict(lambda: float('inf'))
     fScore[start] = h_func(start)
 
-    while len(open_set):
-        # find the element in open_set with smallest fScore
-        current = reduce(lambda acc, x: x if fScore[x] < fScore[acc] else acc, open_set)
-        open_set.remove(current)
+    while not open_set.empty():
+        # get the element in open_set with smallest fScore
+        _, current = open_set.get()
+        if current in closed_set:
+            continue
+
+        closed_set.add(current)
 
         if current == goal:
             path = [current]
@@ -87,13 +96,15 @@ def find_path(grid, start, goal):
             return True, path[1:]
 
         for neighbor in grid.neighbors(current):
+            if neighbor in closed_set:
+                continue
             tentative_gScore = gScore[current] + g_func(neighbor)
             if tentative_gScore < gScore[neighbor]:
                 # this is the better path
                 came_from[neighbor] = current
                 gScore[neighbor] = tentative_gScore
                 fScore[neighbor] = tentative_gScore + h_func(neighbor)
-                open_set.add(neighbor)
+                open_set.put((fScore[neighbor], neighbor))
     
     return False, []
 

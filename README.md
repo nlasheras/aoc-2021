@@ -63,4 +63,5 @@ Today it was one of those days when the straight forward version solution doesn'
 
 ### Day 15
 
-Today's problem seemed like an obvious application of the A* algorithm. My implementation still needs a bit less than 2 minutes for **part 2** so most likely there is some improvement still to do. 
+Today's problem seemed like an obvious application of the A* algorithm. My first implementation needed a bit less than 2 minutes for **part 2** so there was some optimization still missing. I added a *closed set* to not process a node multiple times and also i switched the *open set* to a `PriorityQueue` because I realized that most of the time of getting the best node from the set.
+
