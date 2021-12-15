@@ -60,3 +60,7 @@ I stumbled on a good approach today. Instead of using a grid I just use a `set`Â
 ### Day 14
 
 Today it was one of those days when the straight forward version solution doesn't scale properly. I got the version counting pairs working relatively fast, but then it didn't gave me a correct answer with my input although looking correct. After a lot of debugging I realized that the issue was on initializing the pairs for the input (I didn't account for repeated pairs on the original polymer). 
+
+### Day 15
+
+Today's problem seemed like an obvious application of the A* algorithm. My implementation still needs a bit less than 2 minutes for **part 2** so most likely there is some improvement still to do. 
