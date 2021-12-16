@@ -65,3 +65,6 @@ Today it was one of those days when the straight forward version solution doesn'
 
 Today's problem seemed like an obvious application of the A* algorithm. My first implementation needed a bit less than 2 minutes for **part 2** so there was some optimization still missing. I added a *closed set* to not process a node multiple times and also i switched the *open set* to a `PriorityQueue` because I realized that most of the time of getting the best node from the set.
 
+### Day 16
+
+Todays main difficulty was understanding the format of the packets, but after figuring that out the rest was pretty easy. I made my own `BITStream` and implemented it with a string of 0s and 1s using `StringIO` for simplicity, but then switched the implementation to read the input bits directly.
