@@ -68,3 +68,7 @@ Today's problem seemed like an obvious application of the A* algorithm. My first
 ### Day 16
 
 Todays main difficulty was understanding the format of the packets, but after figuring that out the rest was pretty easy. I made my own `BITStream` and implemented it with a string of 0s and 1s using `StringIO` for simplicity, but then switched the implementation to read the input bits directly.
+
+### Day 17
+
+Didn't have much time today so I implemented a simple bruteforce solution. I got the puzzle solution by just letting the brute force solution to run for about 10 seconds. Afterwards, I did a bit of thinking to try to do some pruning to speedup the program. I got it to 0,3 seconds by just using the easiest possible ranges. 
