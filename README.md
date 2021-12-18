@@ -72,3 +72,8 @@ Todays main difficulty was understanding the format of the packets, but after fi
 ### Day 17
 
 Didn't have much time today so I implemented a simple bruteforce solution. I got the puzzle solution by just letting the brute force solution to run for about 10 seconds. Afterwards, I did a bit of thinking to try to do some pruning to speedup the program. I got it to 0,3 seconds by just using the easiest possible ranges. 
+
+### Day 18
+
+I'd like to optimize today's solution further. I implemented it using a tree, but doing all permutations of the 100 numbers takes about half a minute. Optimizing the data structure to get the leaf inmediately to the left and to the right would get me a decent speedup.
+

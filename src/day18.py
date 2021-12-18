@@ -6,6 +6,7 @@ class TreeNode:
         self.left = None
         self.right = None
         self.value = value
+        self.count = 0
 
     def is_tree(self):
         return self.left and self.right
@@ -154,4 +155,4 @@ part1("input18.txt")
 
 print("\n", end="")
 part2("input18_test.txt")
-#part2("input18.txt")
+part2("input18.txt")
