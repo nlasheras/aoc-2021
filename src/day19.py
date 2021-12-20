@@ -30,19 +30,24 @@ def parse_input(filename):
         return scanners
 
 # This rotation also contain the mirrored space with 48 orientations
+orientations = range(48)
 digit_perm = list(permutations(range(3)))
 sign_changes = list(product([1,-1], repeat=3))
 def rotation(i, v:Point):
+    perm = digit_perm[i // 8]
+    sign = sign_changes[i % 8]
+
+    def sign_component(i):
+        return sign[i]
+
     def component(v: Point, i):
         if i == 0: return v.x
         elif i == 1: return v.y
         elif i == 2: return v.z
 
-    perm = digit_perm[i // 8]
-    sign = sign_changes[i % 8]
-    x = component(v, perm[0]) * sign[0]
-    y = component(v, perm[1]) * sign[1]
-    z = component(v, perm[2]) * sign[2]
+    x = component(v, perm[0]) * sign_component(perm[0])
+    y = component(v, perm[1]) * sign_component(perm[1])
+    z = component(v, perm[2]) * sign_component(perm[2])
     return Point(x, y, z)
 
 def find_overlaps(s1, s2):
@@ -70,19 +75,18 @@ def find_overlaps(s1, s2):
 
 # from a list of overlap pairs I want to find a f(x2,y2,z2) = x1,y1,z1
 def find_transform(overlap_list):
-    for r1 in range(48):
-        for r2 in range(48):
-            for p0 in overlap_list:
-                offset0 =  rotation(r1, p0[0]) - rotation(r2, p0[1])
-                valid = True
-                f = (lambda x, offset=offset0, r=r2: rotation(r, x) + offset)
-                for p in overlap_list:
-                    test = f(p[1])
-                    if (test - p[0]).length_squared() > 0:
-                        valid = False
-                        break
-                if valid:
-                    return f
+    for r1, r2 in product(orientations, repeat=2):
+        for p0 in overlap_list:
+            offset0 =  rotation(r1, p0[0]) - rotation(r2, p0[1])
+            valid = True
+            f = (lambda x, offset=offset0, r=r2: rotation(r, x) + offset)
+            for p in overlap_list:
+                test = f(p[1])
+                if (test - p[0]).length_squared() > 0:
+                    valid = False
+                    break
+            if valid:
+                return f
     return None
 
 def map_beacons(filename):
@@ -105,7 +109,7 @@ def map_beacons(filename):
 
     # fill the missing transform function composing known ones
     count = len(scanners)
-    for p in range(2): # need more than 1 pass
+    for p in range(count): # need more than 1 pass
         for i in range(count):
             for j in range(count):
                 if i == j: continue
