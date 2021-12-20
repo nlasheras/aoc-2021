@@ -80,3 +80,8 @@ I'd like to optimize today's solution further. I implemented it using a tree, bu
 ### Day 19
 
 That was the hardest day so far. I added a `Point` to my utils since it was much easier to code it by being able to do vector math. I had quite a lot of stumbles figuring out the rotations initially, my current implementation isn't perfect but at least it's "complete". I want to polish my solution figuring out, at least, the proper space. 
+
+### Day 20 
+
+Today I got bitten by having my utility grid class. In the end it was much easier to rework the problem with a set of points than trying to handle the bounds cleanly. 
+

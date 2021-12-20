@@ -1,12 +1,16 @@
 class Grid:
-    def __init__(self, filename):
-        with open(filename, "r", encoding='utf-8') as file:
-            lines = [l.rstrip() for l in file.readlines()]
-            self.rows = len(lines)
-            self.cols = len(lines[0])
+    def __init__(self, filename = None):
+        if filename:
+            with open(filename, "r", encoding='utf-8') as file:
+                lines = [l.rstrip() for l in file.readlines()]
+                self.rows = len(lines)
+                self.cols = len(lines[0])
+                for l in lines:
+                    self.cells += [int(c) for c in l]
+        else:
             self.cells = []
-            for l in lines:
-                self.cells += [int(c) for c in l]
+            self.rows = 0
+            self.cols = 0
 
     def get_idx(self, p):
         if 0 <= p[0] < self.cols and 0 <= p[1] < self.rows:
