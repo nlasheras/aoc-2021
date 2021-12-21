@@ -52,19 +52,32 @@ def part1_play_deterministic(pawn1, pawn2):
 from functools import cache
 from itertools import product
 
+# instead of using the full product, we can cache the sum(rolls) since it doesn't
+# matter the order of the individual dice rolls just the amount of steps the pawn
+# advances 
+from collections import defaultdict
+def __cache_rolls__():
+    dict = defaultdict(int)
+    for roll in product([1,2,3], repeat=3):
+        dict[sum(roll)] += 1
+    return dict.items()
+
+rolls_3d3 = __cache_rolls__()
+
 @cache
 def count_wins(g):
     assert(max(g.scores) < 21)
 
     wins = (0, 0)
-    for roll in product([1,2,3], repeat=3):
+    #for roll in product([1,2,3], repeat=3):
+    for roll, frequency in rolls_3d3:
         qg = copy(g)
-        qg.play_once(roll)
+        qg.play_once([roll])
         if max(qg.scores) >= 21:
             qwins = (1, 0) if qg.scores.index(max(qg.scores)) == 0 else (0, 1)
         else:
             qwins = count_wins(qg)
-        wins = (wins[0] + qwins[0], wins[1] + qwins[1])
+        wins = (wins[0] + frequency*qwins[0], wins[1] + frequency*qwins[1])
     
     return wins
 
