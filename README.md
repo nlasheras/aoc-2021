@@ -85,3 +85,6 @@ That was the hardest day so far. I added a `Point` to my utils since it was much
 
 Today I got bitten by having my utility grid class. In the end it was much easier to rework the problem with a set of points than trying to handle the bounds cleanly. 
 
+### Day 21
+
+For today I had to learn how to apply the `functools.cache` using object parameters (I needed to implement `__hash__` and `__eq__`). I had implemented the game using a class and I didn't want to rewrite it just to use memoization. For further optimization I implemented a custom `__copy__` function to avoid using the more expensive `copy.deepcopy`.
