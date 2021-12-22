@@ -88,3 +88,8 @@ Today I got bitten by having my utility grid class. In the end it was much easie
 ### Day 21
 
 For today I had to learn how to apply the `functools.cache` using object parameters (I needed to implement `__hash__` and `__eq__`). I had implemented the game using a class and I didn't want to rewrite it just to use memoization. For further optimization I implemented a custom `__copy__` function to avoid using the more expensive `copy.deepcopy`.
+
+### Day 22
+
+Part 1 was really easy today, since the *simulation* approach was enough to get the result. For part 2 I had to fully rework my approach. First I thought on splitting the Cuboids, but it seemed quite complex and it wasn't until I had drew a 2D version using rectangles that I visualized how to implement the *substract* method using recursive *cuboids*.
+
