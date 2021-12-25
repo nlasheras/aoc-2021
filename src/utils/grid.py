@@ -1,14 +1,14 @@
 class Grid:
-    def __init__(self, filename = None):
+    def __init__(self, filename = None, parse_cell = int):
+        self.cells = []
         if filename:
             with open(filename, "r", encoding='utf-8') as file:
                 lines = [l.rstrip() for l in file.readlines()]
                 self.rows = len(lines)
                 self.cols = len(lines[0])
                 for l in lines:
-                    self.cells += [int(c) for c in l]
+                    self.cells += [parse_cell(c) for c in l]
         else:
-            self.cells = []
             self.rows = 0
             self.cols = 0
 

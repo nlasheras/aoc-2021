@@ -100,3 +100,7 @@ Managed to get the *part 1* answer using the A* implementation but my approach d
 ### Day 24
 
 Did some analysis of the bits of the input but that didn't go anywhere.
+
+### Day 25
+
+Nothing fancy today, just a simple implementation of the problem to get the star and keep working on the previous days. 
