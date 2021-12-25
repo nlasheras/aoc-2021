@@ -93,3 +93,10 @@ For today I had to learn how to apply the `functools.cache` using object paramet
 
 Part 1 was really easy today, since the *simulation* approach was enough to get the result. For part 2 I had to fully rework my approach. First I thought on splitting the Cuboids, but it seemed quite complex and it wasn't until I had drew a 2D version using rectangles that I visualized how to implement the *substract* method using recursive *cuboids*.
 
+### Day 23
+
+Managed to get the *part 1* answer using the A* implementation but my approach doesn't seem to work for part 2.
+
+### Day 24
+
+Did some analysis of the bits of the input but that didn't go anywhere.
