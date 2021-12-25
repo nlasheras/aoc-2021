@@ -101,6 +101,8 @@ Managed to get the *part 1* answer using the A* implementation but my approach d
 
 Did some analysis of the bits of the input but that didn't go anywhere.
 
+My second attempt was trying to convert the code to Python, while analyzing and understanding the code I stumbled on the good approach trying to solve the pairs of blocks.
+
 ### Day 25
 
 Nothing fancy today, just a simple implementation of the problem to get the star and keep working on the previous days. 
