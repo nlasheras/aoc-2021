@@ -95,7 +95,9 @@ Part 1 was really easy today, since the *simulation* approach was enough to get 
 
 ### Day 23
 
-Managed to get the *part 1* answer using the A* implementation but my approach doesn't seem to work for part 2.
+Managed to get the *part 1* answer using the A* implementation but my approach doesn't seem to work for part 2. 
+
+After cleaning up the implementation I spotted some wrong assumptions I made and got the correct answer for both.  
 
 ### Day 24
 

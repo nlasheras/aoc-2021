@@ -30,9 +30,9 @@ class RoomState:
 
     # I'm using @cache for the get_path function I want
     def __hash__(self) -> int:
-        return pods_per_type
+        return self.grid.rows * self.grid.cols
     def __eq__(self, o) -> bool:
-        return True
+        return self.__hash__() == o.__hash__()
 
     def is_finished(self):
         for type in range(4):
@@ -167,48 +167,51 @@ class RoomState:
 
 def parse_input(filename):
     with open(filename, "r") as file:
-        # parse file into a grid
-        g = Grid()
-        for i,line in enumerate(file.readlines()):
-            row = [c for c in line.rstrip()]
-            if i == 0: 
-                g.cols = len(row)
-            else: 
-                row += [' '] * (g.cols - len(row))
-            g.cells += row
-        g.rows = (len(g.cells) // g.cols)
+        return __parse_input__(file.readlines())
 
-        # get the pods into a List of tuples (type, x, y)
-        pods = []
-        for row in range(g.rows):
-            for col in range(g.cols):
-                idx = g.get_idx((col, row))
-                value = g.cells[idx]
-                if value == 'A' or value == 'B' or value == 'C' or value == 'D':
-                    g.cells[idx] = '.'
-                    pods.append((value, col, row))
+def __parse_input__(lines):
+    # parse file into a grid
+    g = Grid()
+    for i,line in enumerate(lines):
+        row = [c for c in line.rstrip()]
+        if i == 0: 
+            g.cols = len(row)
+        else: 
+            row += [' '] * (g.cols - len(row))
+        g.cells += row
+    g.rows = (len(g.cells) // g.cols)
 
-        pods_idx = []
-        for c in range(ord('A'), ord('D')+1):
-            for p in pods:
-                if p[0] == chr(c):
-                    pods_idx.append(g.get_idx((p[1], p[2])))
+    # get the pods into a List of tuples (type, x, y)
+    pods = []
+    for row in range(g.rows):
+        for col in range(g.cols):
+            idx = g.get_idx((col, row))
+            value = g.cells[idx]
+            if value == 'A' or value == 'B' or value == 'C' or value == 'D':
+                g.cells[idx] = '.'
+                pods.append((value, col, row))
 
-        global pods_per_type
-        pods_per_type = len(pods_idx) // 4
-        assert(len(pods_idx) % pods_per_type == 0)
+    pods_idx = []
+    for c in range(ord('A'), ord('D')+1):
+        for p in pods:
+            if p[0] == chr(c):
+                pods_idx.append(g.get_idx((p[1], p[2])))
 
-        global destination_indexes
-        destination_indexes = {}
-        for type in range(4):
-            dest = []
-            c = chr(65 + type)
-            for i in range(2, 2+pods_per_type):
-                pos = (destination_columns[c], i)
-                dest += [g.get_idx(pos)]
-            destination_indexes[c] = dest
+    global pods_per_type
+    pods_per_type = len(pods_idx) // 4
+    assert(len(pods_idx) % pods_per_type == 0)
 
-        return RoomState(g, tuple(pods_idx), [])
+    global destination_indexes
+    destination_indexes = {}
+    for type in range(4):
+        dest = []
+        c = char_from_type(type)
+        for i in range(2, 2+pods_per_type):
+            pos = (destination_columns[c], i)
+            dest += [g.get_idx(pos)]
+        destination_indexes[c] = dest
+
+    return RoomState(g, tuple(pods_idx), [])
 
 def mhd(p1, p2):
     return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
@@ -280,10 +283,9 @@ class PrioritizedState:
     cost: int
     config: RoomState=field(compare=False)
 
-def find_best_path(filename):
+def find_best_path(starting):
     open_set = PriorityQueue()
     
-    starting = parse_input(filename)
     open_set.put(PrioritizedState(0, starting))
 
     closed_set = set()
@@ -354,8 +356,20 @@ def find_best_path(filename):
                 fScore[new_state.pods] = tentative_gScore + h_func(new_state)
                 open_set.put(PrioritizedState(fScore[new_state.pods], new_state))
     
+def make_part2(filename):
+    extra = ["  #D#C#B#A#","  #D#B#A#C#"]
+    with open(filename, "r") as file:
+        lines = file.readlines()
+        return __parse_input__(lines[:3] + extra + lines[3:])
+
 import sys
 if __name__ == '__main__':
     input = sys.argv[1] if len(sys.argv) > 1 else "input23_test.txt" 
-    cost = find_best_path(input)
+    part1 = parse_input(input)
+    cost = find_best_path(part1)
+    print(f"What is the least energy required to organize the amphipods? {cost}\n")
+
+    part2 = make_part2(input)
+    cost = find_best_path(part2)
     print(f"What is the least energy required to organize the amphipods? {cost}")
+
