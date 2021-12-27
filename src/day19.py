@@ -1,10 +1,12 @@
-# https://adventofcode.com/2021/day/19
+"""" https://adventofcode.com/2021/day/19 """
 
-from itertools import permutations
 from itertools import product
+from functools import cache
+import re
 from utils import Point
 
 class Scanner:
+    """A scanner with a index and a list of points of beacons"""
     def __init__(self, index):
         self.index = index
         self.beacons = []
@@ -12,11 +14,13 @@ class Scanner:
     def __repr__(self) -> str:
         return f"scanner {self.index} with {len(self.beacons)} beacons"
 
-import re 
+    def __eq__(self, __o: 'Scanner') -> bool:
+        return self.index == __o.index
+
 def parse_input(filename):
-    scanner_re = re.compile("--- scanner (\d+) ---")
-    beacon_re = re.compile("(-?\d+),(-?\d+),(-?\d+)")
-    with open(filename, "r") as file:
+    scanner_re = re.compile(r"--- scanner (\d+) ---")
+    beacon_re = re.compile(r"(-?\d+),(-?\d+),(-?\d+)")
+    with open(filename, "r", encoding="utf-8") as file:
         scanners = []
         for line in file.readlines():
             if match := scanner_re.match(line):
@@ -29,121 +33,154 @@ def parse_input(filename):
                 scanners[-1].beacons.append(Point(x, y, z))
         return scanners
 
-# This rotation also contain the mirrored space with 48 orientations
-orientations = range(48)
-digit_perm = list(permutations(range(3)))
-sign_changes = list(product([1,-1], repeat=3))
-def rotation(i, v:Point):
-    perm = digit_perm[i // 8]
-    sign = sign_changes[i % 8]
+orientations = range(24)
+@cache
+def rotation(i, point:Point):
+    # To find all possible rotations we will rotate first in around x or y
+    # axis and there we have 4 rotations around z axis
+    z_amount = i % 4
+    y_amount = x_amount = 0
+    if i >= 16:
+        y_amount = ((i - 16) // 4) + 1
+        if y_amount == 2:
+            # rotating twice around y is equivalent to twice around x
+            y_amount = 3
+    else:
+        x_amount = i // 4
 
-    def sign_component(i):
-        return sign[i]
+    def __rotate_x__(_v: Point):
+        return Point(_v.x, _v.z, -_v.y)
+    def __rotate_y__(_v: Point):
+        return Point(_v.z, _v.y, -_v.x)
+    def __rotate_z__(_v: Point):
+        return Point(_v.y, -_v.x, _v.z)
 
-    def component(v: Point, i):
-        if i == 0: return v.x
-        elif i == 1: return v.y
-        elif i == 2: return v.z
+    for _ in range(x_amount):
+        point = __rotate_x__(point)
+    for _ in range(y_amount):
+        point = __rotate_y__(point)
+    for _ in range(z_amount):
+        point = __rotate_z__(point)
+    return point
 
-    x = component(v, perm[0]) * sign_component(perm[0])
-    y = component(v, perm[1]) * sign_component(perm[1])
-    z = component(v, perm[2]) * sign_component(perm[2])
-    return Point(x, y, z)
+def find_overlaps(scanner1, scanner2):
+    """Find a list of beacons of scanner1 that are present also on scanner2.
+    Returns a list of tuples (point_in_1, point_in_2, distance reference beacon)"""
 
-def find_overlaps(s1, s2):
-    t1 = Point(1,2,3)
-    t2 = Point(4,0,-1)
-    t = t2 - t1
-    mag1 = [[(pj - pi).length_squared() for pj in s1.beacons] for pi in s1.beacons]
-    mag2 = [[(pj - pi).length_squared() for pj in s2.beacons] for pi in s2.beacons]
+    # we calculate a matrix of distance from each beacon on the scanner to the rest of
+    # the beacons in the same scanner
+    mag1 = [[(pj - pi).length_squared() for pj in scanner1.beacons] for pi in scanner1.beacons]
+    mag2 = [[(pj - pi).length_squared() for pj in scanner2.beacons] for pi in scanner2.beacons]
 
+    # we find which one is the best beacon to use as reference point and return the
+    # overlaps using that beacon as a reference point
     max_overlaps = []
-    for i, v1 in enumerate(mag1):
-        for j, v2 in enumerate(mag2):
+    for _, point1 in enumerate(mag1):
+        for _, point2 in enumerate(mag2):
             overlaps = []
-            for k, mag_k in enumerate(v2):
-                if mag_k in v1:
-                    k_in_i = v1.index(mag_k)
-                    p2 = s2.beacons[k]
-                    p1 = s1.beacons[k_in_i]
-                    t = (Point(p1.x,p1.y,p1.z), Point(p2.x, p2.y, p2.z), mag_k)
-                    overlaps.append(t)
+            for k, mag_k in enumerate(point2):
+                if mag_k in point1:
+                    k_in_i = point1.index(mag_k)
+                    point_in_2 = scanner2.beacons[k]
+                    point_in_1 = scanner1.beacons[k_in_i]
+                    overlap = (Point(point_in_1.x, point_in_1.y, point_in_1.z),
+                               Point(point_in_2.x, point_in_2.y, point_in_2.z),
+                               mag_k)
+                    overlaps.append(overlap)
             if len(overlaps) > len(max_overlaps):
                 max_overlaps = overlaps
 
     return max_overlaps
 
-# from a list of overlap pairs I want to find a f(x2,y2,z2) = x1,y1,z1
 def find_transform(overlap_list):
-    for r1, r2 in product(orientations, repeat=2):
-        for p0 in overlap_list:
-            offset0 =  rotation(r1, p0[0]) - rotation(r2, p0[1])
-            valid = True
-            f = (lambda x, offset=offset0, r=r2: rotation(r, x) + offset)
-            for p in overlap_list:
-                test = f(p[1])
-                if (test - p[0]).length_squared() > 0:
-                    valid = False
-                    break
-            if valid:
-                return f
+    """From the list of overlap pairs I want to find a mapping function that
+    transforms from scanner2 coordinate system into scanner1
+        f(x2,y2,z2) = x1,y1,z1"""
+
+    assert len(overlap_list) >= 12
+
+    # procedure consists on trying all combinations of orientations for both scanners
+    for rot1, rot2 in product(orientations, repeat=2):
+        for reference_point in overlap_list:
+
+            offset =  rotation(rot1, reference_point[0]) - rotation(rot2, reference_point[1])
+            func = (lambda x, offset=offset, r=rot2: rotation(r, x) + offset)
+
+            def test(overlap, _f = func):
+                return (_f(overlap[1]) - overlap[0]).length_squared() == 0
+
+            if all(map(test, overlap_list)):
+                return func
+
+    # with 12 overlaps we should be able to find a valid func
+    assert False
     return None
 
-def map_beacons(filename):
-    scanners = parse_input(filename)
+def map_beacons(scanners):
+    """Return a matrix of functions to map between beacon coordinate
+    systems """
 
     # find the map of functions to translate from scanner coordinate systems
-    fs = {}
-    for i, s1 in enumerate(scanners):
-        fs[i] = {}
-        for j, s2 in enumerate(scanners):
-            if j == i: 
-                continue
-            overlaps = find_overlaps(s1, s2)
-            if (len(overlaps) < 12):
-                continue 
-            
+    mapping = {}
+    for i, scanner1 in enumerate(scanners):
+        mapping[i] = {}
+        for j, scanner2 in enumerate(scanners):
+            if i == j:
+                continue # no need for mapping to the same scanner
+            overlaps = find_overlaps(scanner1, scanner2)
+            if len(overlaps) < 12:
+                continue # from problem definition
+
             overlaps = list(sorted(overlaps, key=lambda p: p[2]))
-            if f := find_transform(overlaps):
-                fs[i][j] = f
+            if func := find_transform(overlaps):
+                mapping[i][j] = func
 
     # fill the missing transform function composing known ones
     count = len(scanners)
-    for p in range(count): # need more than 1 pass
-        for i in range(count):
-            for j in range(count):
-                if i == j: continue
-                if not j in fs[i]:
-                    for k in range(count):
-                        if i == k: continue
-                        if j in fs[k] and k in fs[i]:
-                            fs[i][j] = lambda x, ii=i, jj=j, kk=k: fs[ii][kk](fs[kk][jj](x))
+    for _ in range(count-1): # we may need more than 1 pass
+        for i, j in product(range(count), repeat=2):
+            # for all missing mapping functions try to find a posible composing
+            if i != j and not j in mapping[i]:
+                for k in range(count):
+                    if i == k:
+                        continue
+                    if j in mapping[k] and k in mapping[i]:
+                        # pylint: disable=line-too-long
+                        composed = lambda x, _ii=i, _jj=j, _kk=k: mapping[_ii][_kk](mapping[_kk][_jj](x))
+                        mapping[i][j] = composed
+
+    return mapping
+
+def main(filename):
+    scanners = parse_input(filename)
+    mapping = map_beacons(scanners)
 
     # Part 1: find unique positions from the coord system of one scanner
     pos_relative_to_0 = set()
-    for i,s in enumerate(scanners):
-        for b in s.beacons:
-            p = fs[0][s.index](b) if s.index != 0 else b
-            pos_relative_to_0.add((p.x,p.y,p.z))
+    for _s in scanners:
+        for _b in _s.beacons:
+            _p = mapping[0][_s.index](_b) if _s.index != 0 else _b
+            pos_relative_to_0.add((_p.x,_p.y,_p.z))
     print(f"How many beacons are there? {len(pos_relative_to_0)}")
-    
-    # Part 2: find the offset to all scanners assuming the scanner 0 coordinate 
+
+    # Part 2: find the offset to all scanners assuming the scanner 0 coordinate
     # system as world origin
     scanner_pos = []
     scanner_pos.append(Point(0,0,0))
+    count = len(scanners)
     for i in range(1,count):
-        scanner_pos.append(fs[0][i](Point(0,0,0)))
+        scanner_pos.append(mapping[0][i](Point(0,0,0)))
 
-    def manhattan_distance(p1, p2):
-        return abs(p2.x - p1.x) + abs(p2.y - p1.y) + abs(p2.z - p1.z)
+    def manhattan_distance(_p1, _p2):
+        return abs(_p2.x - _p1.x) + abs(_p2.y - _p1.y) + abs(_p2.z - _p1.z)
 
     max_distance = 0
-    for i in range(count):
-        for j in range(count):
-            if i == j: continue
-            max_distance = max(max_distance, manhattan_distance(scanner_pos[i], scanner_pos[j]))
+    for i, j in product(range(count), repeat=2):
+        if i == j:
+            continue
+        max_distance = max(max_distance, manhattan_distance(scanner_pos[i], scanner_pos[j]))
     print(f"Max manhattan distance = {max_distance}")
 
 if __name__ == '__main__':
-    map_beacons("input19_test.txt")
-    map_beacons("input19.txt")
+    main("input19_test.txt")
+    main("input19.txt")
