@@ -1,5 +1,5 @@
 [MESSAGES CONTROL]
-#disable=missing-module-docstring,missing-function-docstring
+disable=missing-module-docstring,missing-function-docstring
 
 [BASIC]
 good-names=i,j,k,x,y,z,w

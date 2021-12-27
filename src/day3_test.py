@@ -1,7 +1,11 @@
 import unittest
+
+# pylint: disable=wildcard-import
+# pylint: disable=unused-wildcard-import
 from day3 import *
 
 class BinaryDiagnosticExampleTest(unittest.TestCase):
+    """Unit tests for Day 3 using the problem example input."""
     def setUp(self):
         self.bits, self.bit_length = read_input("input3_test.txt")
 
@@ -21,6 +25,7 @@ class BinaryDiagnosticExampleTest(unittest.TestCase):
 
 
 class BinaryDiagnosticMyInputTest(unittest.TestCase):
+    """Unit tests for Day 3 using my puzzle input."""
     def setUp(self):
         self.bits, self.bit_length = read_input("input3.txt")
 
