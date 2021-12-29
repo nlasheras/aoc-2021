@@ -1,94 +1,64 @@
-# https://adventofcode.com/2021/day/5
+""" https://adventofcode.com/2021/day/5 """
 
 import sys
 import re
 from functools import reduce
+from utils import Point
+from utils import Grid
 
-class Point: 
-    x = 0
-    y = 0
+def normalized(self):
+    """Not really a proper normalization, but just getting the sign of each component"""
+    def __sign__(x):
+        if x == 0:
+            return 0
+        return 1 if x > 0 else -1
 
-    def __init__(self, x = 0, y = 0):
-        self.x = x
-        self.y = y
+    return Point(__sign__(self.x), __sign__(self.y))
 
-    def __repr__(self):
-        return f"Point({self.x}, {self.y})"
-
-    def normalized(self):
-        def _normalize(x):
-            abs = x if x >= 0 else -x
-            return int(x/abs) if x != 0 else 0
-
-        return Point(_normalize(self.x), _normalize(self.y))
-    
-    def __add__(self, other):
-        return Point(self.x + other.x, self.y + other.y)
-
-    def __iadd__(self, other):
-        self.x += other.x
-        self.y += other.y
-        return self
-
-    def __sub__(self, other):
-        return Point(self.x - other.x, self.y - other.y)
-    
-    def __eq__(self, other):
-        return self.x == other.x and self.y == other.y
-    
 
 def read_input(input_file):
     with open(input_file, newline='',encoding='utf-8') as file:
-        lines = file.readlines()
+        input_lines = file.readlines()
         input_re = re.compile(r"(\d*),(\d*) -> (\d*),(\d*)")
 
-        input = []
-        for l in lines:
-            match = input_re.match(l)
-            p1 = Point(int(match.group(1)), int(match.group(2)))
-            p2 = Point(int(match.group(3)), int(match.group(4)))
-            input += [(p1, p2)]
-        
-        return input
+        lines = []
+        for line in input_lines:
+            match = input_re.match(line)
+            start_point = Point(int(match.group(1)), int(match.group(2)))
+            end_point = Point(int(match.group(3)), int(match.group(4)))
+            lines += [(start_point, end_point)]
 
-def render_lines(grid, grid_width, grid_height, lines, include_diagonal = False):
-    for l in lines:
-        start = l[0]
-        end = l[1]
-        dir = (end - start).normalized()
+        return lines
 
-        if not include_diagonal and dir.x != 0 and dir.y != 0:
-            continue 
+def render_lines(grid, lines, include_diagonal = False):
+    for line in lines:
+        start = line[0]
+        end = line[1]
+        line_direction = normalized(end - start)
+
+        if not include_diagonal and line_direction.x != 0 and line_direction.y != 0:
+            continue
 
         current = Point(start.x, start.y)
-        while (True): 
-            idx = current.y*grid_width + current.x
-            grid[idx] += 1
-            if (current == end):
+        while True:
+            idx = current.y*grid.cols + current.x
+            grid.cells[idx] += 1
+            if current == end:
                 break
-            current += dir
-
-def render_grid(grid, grid_width, grid_height):
-    render = ""
-    for y in range(grid_height):
-        for x in range(grid_width):
-            value = grid[y*grid_width + x]
-            render += str(value) if value > 0 else "."
-        render += "\n"
-    print(render)
+            current += line_direction
 
 def count_overlaps(lines, grid_width, grid_height, include_diagonals = False):
-    grid = [0] * grid_width * grid_height
-    render_lines(grid, grid_width, grid_height, lines, include_diagonals)
+    grid = Grid.empty(grid_width, grid_height, 0)
+    render_lines(grid, lines, include_diagonals)
     if grid_width <= 10 and grid_height <= 10:
-        render_grid(grid, grid_width, grid_height)
-    return reduce(lambda acc, x: acc + 1, [x for x in grid if x >= 2], 0)
+        print(grid.render())
+    return reduce(lambda acc, x: acc + 1, [x for x in grid.cells if x >= 2], 0)
 
 def main(input_file):
     lines = read_input(input_file)
 
-    max_x = reduce(lambda x, acc: max(x, acc), [max(l[0].x, l[1].x) for l in lines])
-    max_y = reduce(lambda x, acc: max(x, acc), [max(l[0].y, l[1].y) for l in lines])
+    max_x = reduce(max, [max(l[0].x, l[1].x) for l in lines])
+    max_y = reduce(max, [max(l[0].y, l[1].y) for l in lines])
 
     overlap_count = count_overlaps(lines, max_x+1, max_y+1)
     print(f"At how many points do at least two lines overlap? {overlap_count}")
@@ -98,7 +68,7 @@ def main(input_file):
 
     print("\n")
 
-input_file = sys.argv[1] if len(sys.argv) > 1 else "input5.txt"
-main("input5_test.txt")
-main(input_file)
-
+if __name__ == '__main__':
+    INPUT_FILE = sys.argv[1] if len(sys.argv) > 1 else "input5.txt"
+    main("input5_test.txt")
+    main(INPUT_FILE)

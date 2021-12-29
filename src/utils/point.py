@@ -1,6 +1,6 @@
 class Point:
     """A point in 3D space with x,y,z coordinates"""
-    def __init__(self, x, y, z):
+    def __init__(self, x, y, z = 0):
         self.x = x
         self.y = y
         self.z = z
@@ -17,6 +17,12 @@ class Point:
         return Point(self.x + __o.x, self.y + __o.y, self.z + __o.z)
     def __sub__(self, __o):
         return Point(self.x - __o.x, self.y - __o.y, self.z - __o.z)
+    def __iadd__(self, __o):
+        self.x += __o.x
+        self.y += __o.y
+        self.z += __o.z
+        return self
 
     def length_squared(self):
         return self.x*self.x + self.y*self.y + self.z*self.z
+    

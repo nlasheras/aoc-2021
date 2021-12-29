@@ -6,11 +6,23 @@ class Grid:
                 lines = [l.rstrip() for l in file.readlines()]
                 self.rows = len(lines)
                 self.cols = len(lines[0])
-                for l in lines:
-                    self.cells += [parse_cell(c) for c in l]
+                for _l in lines:
+                    self.cells += [parse_cell(c) for c in _l]
         else:
             self.rows = 0
             self.cols = 0
+
+    @staticmethod
+    def from_file(filename, parse_cell = int):
+        return Grid(filename, parse_cell)
+
+    @staticmethod
+    def empty(cols, rows, initial_value = 0):
+        grid = Grid()
+        grid.cols = cols
+        grid.rows = rows
+        grid.cells = [initial_value] * cols * rows
+        return grid
 
     def get_idx(self, p):
         if 0 <= p[0] < self.cols and 0 <= p[1] < self.rows:
