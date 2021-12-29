@@ -1,18 +1,22 @@
 # https://adventofcode.com/2021/day/8
 
+import itertools
+
+# pylint: disable=invalid-name
+
 def parse_entries(filename):
     with open(filename, newline='',encoding='utf-8') as file:
         entries = []
         lines = file.readlines()
-        for l in lines:
-            split = l.split(" | ")
+        for line in lines:
+            split = line.split(" | ")
             entries += [(split[0].rstrip().split(" "), split[1].rstrip().split(" "))]
         return entries
 
 def part1(filename):
     entries = parse_entries(filename)
     output_values = [e[1] for e in entries]
-    
+
     def test_1478(v):
         return len(v) == 2 or len(v) == 3 or len(v) == 4 or len(v) == 7
 
@@ -21,11 +25,11 @@ def part1(filename):
     print(f"In the output values, how many times do digits 1, 4, 7, or 8 appear? {count}")
 
 # I will assign each letter a,g to bits 0->7 to use bitwise operations to check masks
-def mask(s):
-    mask = 0
-    for c in s:
-        mask |= 1 << ord(c) - ord('a')
-    return mask
+def mask(pattern):
+    bits = 0
+    for c in pattern:
+        bits |= 1 << ord(c) - ord('a')
+    return bits
 
 def deduct_pattern(inputs):
     deducted_numbers = [""] * 10
@@ -48,14 +52,16 @@ def deduct_pattern(inputs):
         else:
             print(f"{n} not found!")
 
-    def match(a, b): return (a^b) & b == 0
-    def flip(m): return (~m & bit_mask)
+    def match(a, b):
+        return (a^b) & b == 0
+    def flip(m):
+        return ~m & bit_mask
 
     find_and_assign(1, inputs, lambda s: len(s) == 2)
     find_and_assign(8, inputs, lambda s: len(s) == 7)
     find_and_assign(7, inputs, lambda s: len(s) == 3)
     find_and_assign(4, inputs, lambda s: len(s) == 4)
-    
+
     len6 = [s for s in inputs if len(s) == 6]
     seg_a = deducted_masks[7] & flip(deducted_masks[1])
     t9 = deducted_masks[4] | seg_a
@@ -64,41 +70,43 @@ def deduct_pattern(inputs):
     t6 = deducted_masks[9] & flip(deducted_masks[7])
     find_and_assign(6, len6, lambda s: match(mask(s), t6) and not match(mask(s), t9))
 
-    find_and_assign(0, len6, lambda s: not match(mask(s), deducted_masks[6]) and not match(mask(s), deducted_masks[9]))
+    find_and_assign(0, len6, \
+        lambda s: not (match(mask(s), deducted_masks[6]) or match(mask(s), deducted_masks[9])))
 
     len5 = [s for s in inputs if len(s) == 5]
     find_and_assign(2, len5, lambda s: match(mask(s), flip(deducted_masks[9])))
 
     find_and_assign(5, len5, lambda s: mask(s) | deducted_masks[1] == deducted_masks[9])
-    
+
     find_and_assign(3, len5, lambda s: mask(s) & deducted_masks[7] == deducted_masks[7])
 
     class SignalPattern:
+        """Helper class that contains the deducted masks and can be used to decode entries"""
+        # pylint: disable=too-few-public-methods
         def __init__(self, masks):
             self.number_masks = masks
-        
-        def decode(self, input):
-            digits = [self.number_masks.index(mask(s)) for s in input]
+
+        def decode(self, entry):
+            digits = [self.number_masks.index(mask(pattern)) for pattern in entry]
             return sum(map(lambda x: pow(10, x[0])*x[1], enumerate(reversed(digits))))
 
     return SignalPattern(deducted_masks)
 
 def part2(filename):
     entries = parse_entries(filename)
-    sum = 0
+    output_sum = 0
     for e in entries:
         d = deduct_pattern(e[0] + e[1])
         output = d.decode(e[1])
         #print(f"{e[1]} = {output}")
-        sum += output
+        output_sum += output
 
-    print(f"What do you get if you add up all of the output values? {sum}")
+    print(f"What do you get if you add up all of the output values? {output_sum}")
 
-import itertools
-
+# pylint: disable=multiple-statements
 def deduct_bf(numbers):
     inputs = ["".join(sorted(s)) for s in numbers]
-    
+
     def not_found(pattern):
         sp = "".join(sorted(pattern))
         return not sp in inputs
@@ -116,13 +124,14 @@ def deduct_bf(numbers):
         if not_found(c+d+f+g+e+b): continue # 6
         if not_found(c+e+f+a+b+d): continue # 9
 
-        class SignalPattern:
-            def __init__(self, a,b,c,d,e,f,g):
+        class SignalPattern: # pylint: disable=too-few-public-methods
+            """Use same API than other version of deduct_pattern"""
+            def __init__(self, a,b,c,d,e,f,g): # pylint: disable=too-many-arguments
                 self.dict = {}
 
                 def __add_key__(pattern, number):
                     self.dict["".join(sorted(pattern))] = number
- 
+
                 __add_key__(a+b, 1)
                 __add_key__(a+b+d, 7)
                 __add_key__(a+b+e+f, 4)
@@ -135,26 +144,27 @@ def deduct_bf(numbers):
                 __add_key__(c+d+f+g+e+b, 6)
                 __add_key__(c+e+f+a+b+d, 9)
 
-            def decode(self, input):
-                digits = [self.dict["".join(sorted(s))] for s in input]
+            def decode(self, entry):
+                digits = [self.dict["".join(sorted(s))] for s in entry]
                 return sum(map(lambda x: pow(10, x[0])*x[1], enumerate(reversed(digits))))
 
         return SignalPattern(a,b,c,d,e,f,g)
 
-        
+
 def part2_bf(filename):
     entries = parse_entries(filename)
-    sum = 0
+    ouput_sum = 0
     for e in entries:
         d = deduct_bf(e[0] + e[1])
         output = d.decode(e[1])
-        sum += output
+        ouput_sum += output
 
-    print(f"What do you get if you add up all of the output values? {sum}")
+    print(f"What do you get if you add up all of the output values? {ouput_sum}")
 
-part1("input8_test.txt")
-part1("input8.txt")
-part2("input8_test.txt")
-part2("input8.txt")
-part2_bf("input8_test.txt")
-part2_bf("input8.txt")
+if __name__ == '__main__':
+    part1("input8_test.txt")
+    part1("input8.txt")
+    part2("input8_test.txt")
+    part2("input8.txt")
+    part2_bf("input8_test.txt")
+    part2_bf("input8.txt")
