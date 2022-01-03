@@ -20,7 +20,7 @@ class Graph:
         with open(filename, "r", encoding="utf-8") as file:
             ret = Graph()
             edge_re = re.compile(r"(\w+)-(\w+)")
-            for _l in file.readlines:
+            for _l in file.readlines():
                 if match := edge_re.search(_l):
                     ret.add_edge(match.group(1), match.group(2))
             return ret
@@ -32,7 +32,7 @@ def find_paths(graph, nodes, can_be_in_path):
     for node in graph.neighbors(nodes[-1]):
         if node == 'end':
             paths += [nodes + [node]]
-        elif not can_be_in_path(nodes, node):
+        elif not can_be_in_path(tuple(nodes), node):
             continue
         else:
             paths += find_paths(graph, nodes + [node], can_be_in_path)
