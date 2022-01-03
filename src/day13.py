@@ -1,71 +1,74 @@
-# https://adventofcode.com/2021/day/13
+""" https://adventofcode.com/2021/day/13 """
 
 from functools import reduce
+import re
 
 class Paper:
+    """Implements the paper and supports the fold left and up operations"""
     def __init__(self):
         self.dots = set()
-    
+
     def __fold__(self, func):
         self.dots = set(map(func, self.dots))
 
     def fold_left(self, x):
-        def get_folded_pos(p):
-            return (2*x - p[0] if p[0] >= x else p[0], p[1])
+        """Fold the paper left along the given x position"""
+        def get_folded_pos(pos):
+            return (2*x - pos[0] if pos[0] >= x else pos[0], pos[1])
         self.__fold__(get_folded_pos)
 
     def fold_up(self, y):
-        def get_folded_pos(p):
-            return (p[0], 2*y - p[1] if p[1] >= y else p[1])
+        """Fold the paper up along the given y position"""
+        def get_folded_pos(pos):
+            return (pos[0], 2*y - pos[1] if pos[1] >= y else pos[1])
         self.__fold__(get_folded_pos)
 
-    def print(self):
-        max = reduce(lambda acc, p: (p[0] if p[0]>acc[0] else acc[0], p[1] if p[1] > acc[1] else acc[1]), self.dots)
+    def render(self):
+        max_x = reduce(max, [pos[0] for pos in self.dots])
+        max_y = reduce(max, [pos[1] for pos in self.dots])
         render = ""
-        for y in range(max[1]+1):
-            for x in range(max[0]+1):
+        for y in range(max_y+1):
+            for x in range(max_x+1):
                 if (x, y) in self.dots:
                     render += "#"
                 else:
                     render += "."
             render += "\n"
-        print(render, end='')
+        return render
 
-import re
 def read_input(filename):
-    with open(filename, "r") as file:
-        p = Paper()
+    """Return a tuple with the Paper and the commands from the input file"""
+    with open(filename, "r", encoding="utf-8") as file:
+        paper = Paper()
         commands = []
-        lines = file.readlines()
-        dot_re = re.compile("(\d+),(\d+)")
-        fold_re = re.compile("fold along (\w)=(\d+)")
+        dot_re = re.compile(r"(\d+),(\d+)")
+        fold_re = re.compile(r"fold along (\w)=(\d+)")
 
         reached_commands = False
-        for l in lines:
-            if not reached_commands and (match := dot_re.search(l)):
-                p.dots.add((int(match.group(1)), int(match.group(2))))
-            elif match := fold_re.search(l):
+        for line in file.readlines():
+            if not reached_commands and (match := dot_re.search(line)):
+                paper.dots.add((int(match.group(1)), int(match.group(2))))
+            elif match := fold_re.search(line):
                 commands.append((match.group(1), int(match.group(2))))
-        return (p, commands)
+        return (paper, commands)
 
+def apply_command(paper: Paper, command):
+    if command[0] == "x":
+        paper.fold_left(command[1])
+    elif command[0] == "y":
+        paper.fold_up(command[1])
 
 def part1_count_dots(filename):
-    p, commands = read_input(filename)
-    for c in commands[:1]:
-        if c[0] == "x":
-            p.fold_left(c[1])
-        elif c[0] == "y":
-            p.fold_up(c[1])
-    print(f"How many dots are visible after completing just the first fold instruction on your transparent paper? {len(p.dots)}")
+    """Apply only first command and count the amount of dots"""
+    paper, commands = read_input(filename)
+    apply_command(paper, commands[0])
+    print(f"How many dots are visible after completing just the first fold instruction on your transparent paper? {len(paper.dots)}")
 
 def part2_print(filename):
-    p, commands = read_input(filename)
-    for c in commands:
-        if c[0] == "x":
-            p.fold_left(c[1])
-        elif c[0] == "y":
-            p.fold_up(c[1])
-    p.print()
+    paper, commands = read_input(filename)
+    for _c in commands:
+        apply_command(paper, _c)
+    print(paper.render())
 
 if __name__ == '__main__':
     part1_count_dots("input13_test.txt")
