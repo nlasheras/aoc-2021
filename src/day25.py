@@ -1,71 +1,70 @@
-# https://adventofcode.com/2021/day/25
+""" https://adventofcode.com/2021/day/25 """
 
+import sys
 from utils import Grid
 
 def step(cucumbers: set, cols, rows):
+    """Simulate 1 step of the sea cucumber set in a cols x rows grid"""
     count = 0
     new_cucumbers = set()
     # horizontal pass
-    for c in cucumbers: 
-        if c[0] == '>':
-            pos = (c[1] + 1, c[2]) if c[1] < cols-1 else (0, c[2])
+    for _c in cucumbers:
+        if _c[0] == '>':
+            pos = (_c[1] + 1, _c[2]) if _c[1] < cols-1 else (0, _c[2])
             if ('>', pos[0], pos[1]) not in cucumbers and \
                ('v', pos[0], pos[1]) not in cucumbers:
-                    new_cucumbers.add(('>', pos[0], pos[1]))
-                    count += 1
+                new_cucumbers.add(('>', pos[0], pos[1]))
+                count += 1
             else:
-                new_cucumbers.add(c)
+                new_cucumbers.add(_c)
     # vertical pass
-    for c in cucumbers: 
-        if c[0] == 'v':
-            pos = (c[1], c[2]+1) if c[2] < rows-1 else (c[1], 0)
+    for _c in cucumbers:
+        if _c[0] == 'v':
+            pos = (_c[1], _c[2]+1) if _c[2] < rows-1 else (_c[1], 0)
             if ('>', pos[0], pos[1]) not in new_cucumbers and \
                ('v', pos[0], pos[1]) not in cucumbers:
-                    new_cucumbers.add(('v', pos[0], pos[1]))
-                    count += 1
+                new_cucumbers.add(('v', pos[0], pos[1]))
+                count += 1
             else:
-                new_cucumbers.add(c)
+                new_cucumbers.add(_c)
     return new_cucumbers, count
 
-def render(set, cols, rows):
-    render = ""
+def render(cucumber_set, cols, rows):
+    result = ""
     for row in range(rows):
         for col in range(cols):
-            if ('>', col, row) in set:
-                render += '>'
-            elif ('v', col, row) in set:
-                render += 'v'
+            if ('>', col, row) in cucumber_set:
+                result += '>'
+            elif ('v', col, row) in cucumber_set:
+                result += 'v'
             else:
-                render += '.'
-        render += "\n"
-    return render
+                result += '.'
+        result += "\n"
+    return result
 
 def parse_input(filename):
-    g = Grid(filename, str)
+    grid = Grid.from_file(filename, str)
 
     cucumbers = set()
-    for row in range(g.rows):
-        for col in range(g.cols):
-            idx = g.get_idx((col, row))
-            if g.cells[idx] != '.':
-                cucumbers.add((g.cells[idx], col, row))
-    
-    return cucumbers, g.cols, g.rows
+    for pos in grid.positions():
+        if grid.get_value(pos) != '.':
+            cucumbers.add((grid.get_value(pos), pos[0], pos[1]))
+
+    return cucumbers, grid.cols, grid.rows
 
 def part1(filename):
     cucumbers, cols, rows = parse_input(filename)
 
-    steps = 0
+    _step = 0
     while True:
         cucumbers, moves = step(cucumbers, cols, rows)
-        steps += 1
+        _step += 1
         if moves == 0:
             break
-    
-    return steps
-    
-import sys
+
+    return _step
+
 if __name__ == '__main__':
-    file = sys.argv[1] if len(sys.argv) > 1 else "input25.txt"
-    steps = part1(file)
+    INPUT_FILE = sys.argv[1] if len(sys.argv) > 1 else "input25.txt"
+    steps = part1(INPUT_FILE)
     print(f"What is the first step on which no sea cucumbers move? {steps}")
