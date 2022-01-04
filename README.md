@@ -57,6 +57,8 @@ I spent a bit longer today making a `Grid` class since it seems that many proble
 
 Forgot to comment on the log yesterday. Main issue I had was understanding the condition for part 2. My current solution takes ~20 secs in the old laptop so I want to test some optimizations after doing day 13 today. 
 
+After event finished I profiled the code and found most of the time was spent on the bottom part of `part2_cond` so I removed the dictionary comprehension to count the amount of times a node in the path appears twice and got the program to run in ~10 seconds. There is still some optimization potential relying on the fact that I don't need the path, just the count.
+
 ### Day 13
 
 I stumbled on a good approach today. Instead of using a grid I just use a `set` to store the dots and just apply a function to transform the dots to the folded positions. 
