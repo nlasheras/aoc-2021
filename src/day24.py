@@ -1,13 +1,14 @@
-# https://adventofcode.com/2021/day/24
+""" https://adventofcode.com/2021/day/24 """
 
 import re
+
 class ALU:
     """Reference implementation of the ALU to check results."""
     def __init__(self, filename):
         self.registers = { 'w': 0, 'x': 0, 'y': 0, 'z': 0}
-        op_re = re.compile("(\w*) (-?\w*) ?(-?\w*)?")
+        op_re = re.compile(r"(\w*) (-?\w*) ?(-?\w*)?")
         self.program = []
-        with open(filename, "r") as file:
+        with open(filename, "r", encoding="utf-8") as file:
             for l in file.readlines():
                 if match := op_re.match(l):
                     opcode = match.group(1)
@@ -23,21 +24,20 @@ class ALU:
                     self.program[-1].append((opcode, op1, op2))
 
     def run(self, number):
-        input = [int(n) for n in str(number)]
+        input_number = [int(n) for n in str(number)]
         input_ptr = 0
-        for r in self.registers.keys():
+        for r in self.registers:
             self.registers[r] = 0
- 
+
         def get_value(argument):
             if argument in self.registers:
                 return self.registers[argument]
-            else:
-                return argument
+            return argument
 
         for block in self.program:
             for instruction in block:
                 if instruction[0] == "inp":
-                    self.registers[instruction[1]] = input[input_ptr]
+                    self.registers[instruction[1]] = input_number[input_ptr]
                     input_ptr += 1
                 elif instruction[0] == "add":
                     self.registers[instruction[1]] += get_value(instruction[2])
@@ -52,8 +52,10 @@ class ALU:
                 else:
                     print(f"Unhandled op: {instruction[0]} {instruction[1]} {instruction[2]}")
 
-    def y(self): return self.registers['y']
-    def z(self): return self.registers['z']
+    def y(self):
+        return self.registers['y']
+    def z(self):
+        return self.registers['z']
 
 def code_block(p4, p5, p15, w, y = 0, z = 0):
     """Reimplementation of each of the code blocks in Python extracting
@@ -66,7 +68,7 @@ def code_block(p4, p5, p15, w, y = 0, z = 0):
 
     ### top = z.pop()
     #mul x 0, add x z, mod x 26
-    x = z % 26 
+    x = z % 26
     #div z p4
     z //= p4
 
@@ -78,13 +80,13 @@ def code_block(p4, p5, p15, w, y = 0, z = 0):
 
     ### if x == 1: z.push(p15 + w)
     #mul y 0, add y 25, mul y x, add y 1, mul z y
-    z *= (25*x + 1) 
+    z *= (25*x + 1)
     #mul y 0, add y w, add y p15, mul y x
     y = (w + p15) * x # when x == 0, nothing is added
     #add z y
     z += y
     return y, z
-    
+
 def to_stack(z):
     """Test function to debug values of z"""
     stack = []
@@ -99,7 +101,7 @@ def find_pairs(alu):
     stack = []
     for b_i, block in enumerate(alu.program):
         p4 = block[4][2]
-        if p4 == 26: 
+        if p4 == 26:
             top = stack.pop()
             pairs.append((top, b_i))
         else:
@@ -107,32 +109,32 @@ def find_pairs(alu):
     return pairs
 
 if __name__ == '__main__':
-    input = ALU("input24.txt")
-    test_number = 13579246899999
-    input.run(test_number)
+    input_alu = ALU("input24.txt")
+    TEST_NUMBER = 13579246899999
+    input_alu.run(TEST_NUMBER)
 
     # Test that my code_block implementation works same as the reference
     y = z = 0
-    for i, b in enumerate(input.program):
+    for i, b in enumerate(input_alu.program):
         p4  = b[4][2]
         p5  = b[5][2]
         p15 = b[15][2]
-        w = int(str(test_number)[i])
+        w = int(str(TEST_NUMBER)[i])
         y, z = code_block(p4, p5, p15, w, y, z)
-    
-    assert(input.y() == y)
-    assert(input.z() == z)
 
-    """To find the best number I find the pair of push pops and resolve 
+    assert input_alu.y() == y
+    assert input_alu.z() == z
+
+    """To find the best number I find the pair of push pops and resolve
     each pair to find the first value in range that succesfully push the
     value pushed"""
-    pairs = find_pairs(input)
-    def solve_pairs(range):
+    pairs = find_pairs(input_alu)
+    def solve_pairs(_range):
         value = 0
-        for p_i, p in enumerate(reversed(pairs)):
-            for i in range:
-                push_p15 = input.program[p[0]][15][2]
-                pop_p5 = input.program[p[1]][5][2]
+        for _, p in enumerate(reversed(pairs)):
+            for i in _range:
+                push_p15 = input_alu.program[p[0]][15][2]
+                pop_p5 = input_alu.program[p[1]][5][2]
                 top = i + push_p15 + pop_p5
                 if 1 <= top <= 9:
                     value += i*pow(10, 13 - p[0]) + top*pow(10, 13 - p[1])
@@ -140,13 +142,9 @@ if __name__ == '__main__':
         return value
 
     part1 = solve_pairs(range(9, 0, -1))
-    input.run(part1)
-    print(f"What is the largest model number accepted by MONAD? {part1} (z={input.z()})")
+    input_alu.run(part1)
+    print(f"What is the largest model number accepted by MONAD? {part1} (z={input_alu.z()})")
 
     part2 = solve_pairs(range(1, 10))
-    input.run(part2)
-    print(f"What is the smallest model number accepted by MONAD? {part2} (z={input.z()})")
-        
-
-
-    
+    input_alu.run(part2)
+    print(f"What is the smallest model number accepted by MONAD? {part2} (z={input_alu.z()})")
