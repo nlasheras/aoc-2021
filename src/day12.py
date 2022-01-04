@@ -62,11 +62,15 @@ def part2_visit_small_caves_twice(filename):
         if not node in path:
             return True
 
-        counts = {n: sum([1 for e in path if e == n]) for n in path if n.islower()}
-        counts[node] += 1 # assume it's in path
-
-        if counts[node] > 2: # a single node can be visited at most twice
+        count_node = sum([1 for e in path if e == node])
+        if count_node > 1:
             return False
+
+        counts = defaultdict(int)
+        for _n in path:
+            if _n.islower():
+                counts[_n] += 1
+        counts[node] += 1 # assume its in path
 
         caves_visited_twice = sum([1 for e in counts.values() if e >= 2])
         return  caves_visited_twice <= 1
