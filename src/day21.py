@@ -1,4 +1,4 @@
-# https://adventofcode.com/2021/day/21
+""" https://adventofcode.com/2021/day/21 """
 
 from copy import copy
 from functools import cache
