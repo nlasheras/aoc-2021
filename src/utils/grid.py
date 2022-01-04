@@ -1,5 +1,5 @@
 from itertools import product
-from utils import TermColors
+from utils.termcolors import TermColors
 
 class Grid:
     """A grid of cells of any type"""
@@ -46,10 +46,10 @@ class Grid:
         """Get the neighbor positions of a given position"""
         valid = []
         for delta in [(1,0), (0,1), (-1, 0), (0, -1)]:
-            pos = (pos[0] + delta[0], pos[1] + delta[1])
-            if (pos[0] >= 0 and pos[0] < self.cols and
-                pos[1] >= 0 and pos[1] < self.rows):
-                valid.append(pos)
+            npos = (pos[0] + delta[0], pos[1] + delta[1])
+            if (0 <= npos[0] < self.cols and
+                0 <= npos[1] < self.rows):
+                valid.append(npos)
         return valid
 
     def positions(self):
