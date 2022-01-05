@@ -1,4 +1,4 @@
-# https://adventofcode.com/2021/day/20
+""" https://adventofcode.com/2021/day/20 """
 
 from functools import reduce
 from typing import Tuple
