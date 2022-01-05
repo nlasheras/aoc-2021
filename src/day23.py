@@ -12,8 +12,8 @@ from utils import Grid, TermColors
 destination_columns = { 'A': 3, 'B': 5, 'C': 7, 'D': 9 }
 move_cost = { 'A': 1, 'B': 10, 'C': 100, 'D': 1000 }
 
-## this will be updated on parse_input
 POD_TYPES = ('A', 'B', 'C', 'D')
+## this will be updated on parse_input
 PODS_PER_TYPE = 2
 DESTINATION_INDEXES = {} # dict
 
