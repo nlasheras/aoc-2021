@@ -1,26 +1,33 @@
-# https://adventofcode.com/2021/day/23
+""" https://adventofcode.com/2021/day/23 """
 
-from utils import Grid, TermColors
-from dataclasses import dataclass, field
-from typing import Tuple, List
+from collections import defaultdict
 from copy import copy
 from functools import cache
+from dataclasses import dataclass, field
+from queue import PriorityQueue
+import sys
+from typing import Tuple, List
+from utils import Grid, TermColors
 
 destination_columns = { 'A': 3, 'B': 5, 'C': 7, 'D': 9 }
 move_cost = { 'A': 1, 'B': 10, 'C': 100, 'D': 1000 }
 
 ## this will be updated on parse_input
-pods_per_type = 2
-destination_indexes = {} # dict 
+POD_TYPES = ('A', 'B', 'C', 'D')
+PODS_PER_TYPE = 2
+DESTINATION_INDEXES = {} # dict
 
-def char_from_type(type:int) -> str:
-    return chr(65 + type)
+def char_from_type(_type:int) -> str:
+    return chr(65 + _type)
 
 def get_pod_type(idx: int) -> str:
-    return char_from_type(idx // pods_per_type)
+    return char_from_type(idx // PODS_PER_TYPE)
 
 @dataclass(order=False)
 class RoomState:
+    """Stores the current state of the amphipods in the room. It has a reference
+    to the grid map and then the state is the position of each pod and a list of
+    pods that have moved"""
     grid: Grid
     pods: Tuple[int] # pos of each amphipod
     moved_pods: List[int] # idx of moving pods
@@ -31,33 +38,37 @@ class RoomState:
     # I'm using @cache for the get_path function I want
     def __hash__(self) -> int:
         return self.grid.rows * self.grid.cols
-    def __eq__(self, o) -> bool:
-        return self.__hash__() == o.__hash__()
+    def __eq__(self, __o) -> bool:
+        return self.__hash__() == __o.__hash__()
 
     def is_finished(self):
-        for type in range(4):
-            pods_in_room = sorted(self.pods[pods_per_type*type:pods_per_type*(type+1)])
-            correct_pods = destination_indexes[char_from_type(type)]
+        """Checks for all pod types if all the pods are in their destination room"""
+        for type_ in range(4):
+            pods_in_room = sorted(self.pods[PODS_PER_TYPE*type_:PODS_PER_TYPE*(type_+1)])
+            correct_pods = DESTINATION_INDEXES[char_from_type(type_)]
             if pods_in_room != correct_pods:
                 return False
         return True
 
-    def get_pod_at_pos(self, pos : Tuple[int]):
+    def get_pod_at_pos(self, pos : Tuple[int, int]) -> int:
+        """If there is a pod at a given position, returns the index on the pods list, None if there isn't """
         idx = self.grid.get_idx(pos)
         return self.get_pod_at_grid(idx)
-    
+
     def get_pod_at_grid(self, idx: int):
+        """If there is a pod at a given index, returns the index on the pods list, None if there isn't """
         if idx in self.pods:
             return self.pods.index(idx)
         return None
 
     def render(self):
+        """Returns a string with a render of the RoomState that can be printed in the console"""
         render = ""
         for row in range(self.grid.rows):
             for col in range(self.grid.cols):
                 pod = self.get_pod_at_pos((col, row))
                 if pod is not None:
-                    type = pod // pods_per_type
+                    type_ = pod // PODS_PER_TYPE
 
                     # check what color to render the amphipod
                     color = None
@@ -69,40 +80,40 @@ class RoomState:
                         else:
                             color = TermColors.YELLOW
 
-                    if color: 
+                    if color:
                         render += color
-                    render += char_from_type(type)
-                    if color: 
+                    render += char_from_type(type_)
+                    if color:
                         render += TermColors.ENDC
                 else:
                     value = self.grid.cells[self.grid.get_idx((col, row))]
                     render += value
             render += "\n"
         return render
-    
+
     @cache
     def get_path(self, from_idx, to_idx):
         """Returns all the positions that an amphipod must cross to reach
         the destination position. Not including the starting tile."""
         fcol, frow = self.grid.get_pos(from_idx)
         dcol, drow = self.grid.get_pos(to_idx)
-        dx = dcol - fcol
-        dy = drow - frow
+        dest_x = dcol - fcol
+        dest_y = drow - frow
 
-        def sign(a):
-            return 1 if a >= 0 else - 1
+        def sign(value):
+            return 1 if value >= 0 else - 1
 
         path = []
         if frow > 1:
-            for i in range(1, abs(dy)+1):
-                path.append((fcol, frow+i*sign(dy)))
-            for i in range(1, abs(dx)+1):
-                path.append((fcol+i*sign(dx), drow))
+            for i in range(1, abs(dest_y)+1):
+                path.append((fcol, frow+i*sign(dest_y)))
+            for i in range(1, abs(dest_x)+1):
+                path.append((fcol+i*sign(dest_x), drow))
         else:
-            for i in range(1, abs(dx)+1):
-                path.append((fcol+i*sign(dx), frow))
-            for i in range(1, abs(dy)+1):
-                path.append((dcol, frow+i*sign(dy)))
+            for i in range(1, abs(dest_x)+1):
+                path.append((fcol+i*sign(dest_x), frow))
+            for i in range(1, abs(dest_y)+1):
+                path.append((dcol, frow+i*sign(dest_y)))
 
         return [self.grid.get_idx(p) for p in path]
 
@@ -111,35 +122,43 @@ class RoomState:
         """Returns the indices of the valid hallway postions for a move of
         an amphipod in a given position."""
         col, row = self.grid.get_pos(from_idx)
-        assert(row == 1)
+        assert row == 1
         if row == 1:
             moves = []
-            
-            if col > 2: moves += [(col-2, 1)]
-            elif col > 1: moves += [(col-1, 1)]
+
+            if col > 2:
+                moves += [(col-2, 1)]
+            elif col > 1:
+                moves += [(col-1, 1)]
 
             grid_columns = self.grid.cols
-            if col < grid_columns - 3: moves += [(col+2, 1)]
-            elif col < grid_columns - 2: moves += [(col+1, 1)]
+            if col < grid_columns - 3:
+                moves += [(col+2, 1)]
+            elif col < grid_columns - 2:
+                moves += [(col+1, 1)]
 
             return [self.grid.get_idx(p) for p in moves \
                 if p[0] not in destination_columns.values()]
         return []
 
     def get_top_pod_in_rooms(self):
+        """Returns the first pod in a room that wants to move"""
         ret = []
-        for room in ('A', 'B', 'C', 'D'):
-            for grid_idx in destination_indexes[room]:
+        for room in POD_TYPES:
+            for grid_idx in DESTINATION_INDEXES[room]:
                 if grid_idx in self.pods:
                     i = self.pods.index(grid_idx)
                     if not self.is_done(i):
                         ret += [i]
                         break
         return ret
-    
+
     def get_empty_spot_in_room(self, room):
-        if room in destination_indexes:
-            indexes = destination_indexes[room]
+        """Returns the grid index of the first spot in a room where a pod can enter. If
+        there is other type of pods in the room, this won't return anything since pods cannot
+        return yet"""
+        if room in DESTINATION_INDEXES:
+            indexes = DESTINATION_INDEXES[room]
             for grid_idx in reversed(indexes):
                 if grid_idx in self.pods:
                     if not self.is_done(self.pods.index(grid_idx)):
@@ -149,103 +168,106 @@ class RoomState:
         return None
 
     def is_done(self, idx):
+        """Checks if the given pod needs to move in this state. A pod will need to move if
+        it is in a different room or some amphipod under it needs to move."""
         grid_idx = self.pods[idx]
         col, row = self.grid.get_pos(grid_idx)
-        type = self.pods.index(grid_idx) // pods_per_type
-        if col == destination_columns[chr(65 + type)]:
-            if row >= 1: 
+        type_ = self.pods.index(grid_idx) // PODS_PER_TYPE
+        if col == destination_columns[chr(65 + type_)]:
+            if row >= 1:
                 for i in range(row+1, self.grid.rows - 1):
                     other = self.get_pod_at_pos((col, i))
                     if other is None:
                         return False
-                    else:
-                        other_type = other // pods_per_type
-                        if type != other_type:
-                            return False
+                    other_type = other // PODS_PER_TYPE
+                    if type_ != other_type:
+                        return False
                 return True
         return False
 
 def parse_input(filename):
-    with open(filename, "r") as file:
+    with open(filename, "r", encoding="utf-8") as file:
         return __parse_input__(file.readlines())
 
 def __parse_input__(lines):
     # parse file into a grid
-    g = Grid()
+    grid = Grid()
     for i,line in enumerate(lines):
-        row = [c for c in line.rstrip()]
-        if i == 0: 
-            g.cols = len(row)
-        else: 
-            row += [' '] * (g.cols - len(row))
-        g.cells += row
-    g.rows = (len(g.cells) // g.cols)
+        row = list(line.rstrip())
+        if i == 0:
+            grid.cols = len(row)
+        else:
+            row += [' '] * (grid.cols - len(row))
+        grid.cells += row
+    grid.rows = (len(grid.cells) // grid.cols)
 
     # get the pods into a List of tuples (type, x, y)
     pods = []
-    for row in range(g.rows):
-        for col in range(g.cols):
-            idx = g.get_idx((col, row))
-            value = g.cells[idx]
-            if value == 'A' or value == 'B' or value == 'C' or value == 'D':
-                g.cells[idx] = '.'
+    for row in range(grid.rows):
+        for col in range(grid.cols):
+            idx = grid.get_idx((col, row))
+            value = grid.cells[idx]
+            if value in POD_TYPES:
+                grid.cells[idx] = '.'
                 pods.append((value, col, row))
 
     pods_idx = []
-    for c in range(ord('A'), ord('D')+1):
-        for p in pods:
-            if p[0] == chr(c):
-                pods_idx.append(g.get_idx((p[1], p[2])))
+    for type_ in POD_TYPES:
+        for pod in pods:
+            if pod[0] == type_:
+                pods_idx.append(grid.get_idx((pod[1], pod[2])))
 
-    global pods_per_type
-    pods_per_type = len(pods_idx) // 4
-    assert(len(pods_idx) % pods_per_type == 0)
+    global PODS_PER_TYPE
+    PODS_PER_TYPE = len(pods_idx) // 4
+    assert len(pods_idx) % PODS_PER_TYPE == 0
 
-    global destination_indexes
-    destination_indexes = {}
-    for type in range(4):
+    global DESTINATION_INDEXES
+    DESTINATION_INDEXES = {}
+    for type_ in POD_TYPES:
         dest = []
-        c = char_from_type(type)
-        for i in range(2, 2+pods_per_type):
-            pos = (destination_columns[c], i)
-            dest += [g.get_idx(pos)]
-        destination_indexes[c] = dest
+        for i in range(2, 2+PODS_PER_TYPE):
+            pos = (destination_columns[type_], i)
+            dest += [grid.get_idx(pos)]
+        DESTINATION_INDEXES[type_] = dest
 
-    return RoomState(g, tuple(pods_idx), [])
+    return RoomState(grid, tuple(pods_idx), [])
 
-def mhd(p1, p2):
-    return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
-    
+def mhd(pos1, pos2):
+    """Return Manhattan distance between two given positions"""
+    return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
+
 def is_path_free(current: RoomState, from_idx, to_idx):
+    """Checks if an amphipod can move between two given positions in the grid"""
     for idx in current.get_path(from_idx, to_idx):
         if idx in current.pods:
             return False
     return True
 
 def get_moves(current: RoomState):
+    """Get all moves that can be done from a given RoomState"""
     moves = []
-            
-    for p in reversed(current.moved_pods):
-        if current.is_done(p):
+
+    for pod in reversed(current.moved_pods):
+        if current.is_done(pod):
             continue
-        if p == current.moved_pods[-1]:
+        if pod == current.moved_pods[-1]:
             # do moves por current moving pod
-            p_pos = current.pods[p]
-            moves += [(p, idx) for idx in current.get_hallway_moves(p_pos)]
+            p_pos = current.pods[pod]
+            moves += [(pod, idx) for idx in current.get_hallway_moves(p_pos)]
 
-        type = get_pod_type(p)
-        empty_spot_idx = current.get_empty_spot_in_room(type)
+        type_ = get_pod_type(pod)
+        empty_spot_idx = current.get_empty_spot_in_room(type_)
         if empty_spot_idx:
-            moves += [(p, empty_spot_idx)]
+            moves += [(pod, empty_spot_idx)]
 
-    for p in current.get_top_pod_in_rooms():
-        assert(not p in current.moved_pods)
-        p_pos = current.pods[p]
+    for pod in current.get_top_pod_in_rooms():
+        assert not pod in current.moved_pods
+        p_pos = current.pods[pod]
         col, _ = current.grid.get_pos(p_pos)
         out_pos = [(col-1, 1), (col+1, 1)]
         for pos in out_pos:
             out_idx = current.grid.get_idx(pos)
-            moves += [(p, out_idx)]
+            moves += [(pod, out_idx)]
 
     # translate moves tuples (pod, grid_idx) into Move
     ret = []
@@ -254,15 +276,15 @@ def get_moves(current: RoomState):
         if not is_path_free(current, from_idx, dest_idx):
             continue
 
-        type = get_pod_type(pod)
+        type_ = get_pod_type(pod)
         config = copy(current)
         # replace the index of config.pod[pod]
-        config.pods = tuple(dest_idx if p == pod else idx for p, idx in enumerate(current.pods)) 
-        
+        config.pods = tuple(dest_idx if p == pod else idx for p, idx in enumerate(current.pods))
+
         def dist(idx1, idx2):
             return mhd(current.grid.get_pos(idx1), current.grid.get_pos(idx2))
 
-        cost = move_cost[type] * dist(from_idx, dest_idx)
+        _cost = move_cost[type_] * dist(from_idx, dest_idx)
 
         if not pod in config.moved_pods:
             config.moved_pods.append(pod)
@@ -271,46 +293,46 @@ def get_moves(current: RoomState):
             config.moved_pods.remove(pod)
             config.moved_pods.append(pod)
 
-        ret.append((cost, config))
+        ret.append((_cost, config))
 
     return ret
 
-from queue import PriorityQueue
-from collections import defaultdict
-
-@dataclass(order=True)
-class PrioritizedState:
-    cost: int
-    config: RoomState=field(compare=False)
-
 def find_best_path(starting):
+    """Find the best moves using A*"""
+
+    @dataclass(order=True)
+    class PrioritizedState:
+        """Dataclass to insert the RoomStates into the priority queue"""
+        cost: int
+        config: RoomState=field(compare=False)
+
     open_set = PriorityQueue()
-    
+
     open_set.put(PrioritizedState(0, starting))
 
     closed_set = set()
 
     came_from = {} # map of pod config with the (pods, moved_pods)
-    
-    gScore = defaultdict(lambda: float('inf'))
-    gScore[starting.pods] = 0
+
+    g_score = defaultdict(lambda: float('inf'))
+    g_score[starting.pods] = 0
 
     def h_func(state: RoomState):
         # As the heuristic for the A* we will use the sum of distances
         # to the entrance of that amphipod room
-        sum = 0
+        _cost = 0
         for i, pod_idx in enumerate(state.pods):
-            type = get_pod_type(i)
-            dest = destination_columns[type]
+            type_ = get_pod_type(i)
+            dest = destination_columns[type_]
             column = pod_idx % state.grid.cols
             if column != dest:
-                dist =  mhd(state.grid.get_pos(pod_idx), (dest, 1)) 
-                k = dist * move_cost[type]
-                sum += k
-        return sum
- 
-    fScore = defaultdict(lambda: float('inf'))
-    fScore[starting.pods] = h_func(starting)
+                dist =  mhd(state.grid.get_pos(pod_idx), (dest, 1))
+                k = dist * move_cost[type_]
+                _cost += k
+        return _cost
+
+    f_score = defaultdict(lambda: float('inf'))
+    f_score[starting.pods] = h_func(starting)
 
     max_done = -1
     while not open_set.empty():
@@ -321,55 +343,53 @@ def find_best_path(starting):
         if current.is_finished():
             # if reached the best state, reconstruct the movements using
             # the came_from dictionary
-            cost = gScore[current.pods]
+            _cost = g_score[current.pods]
             pods = current.pods
             path = []
-            while (gScore[pods] != 0):
+            while g_score[pods] != 0:
                 path.append(pods)
                 pods, _ = came_from[pods]
 
             current.pods = starting.pods
             current.moved_pods = []
-            for p in reversed(path):
-                print(gScore[p] - gScore[current.pods])
-                current.pods = p
-                current.moved_pods = came_from[p][1]
+            for pos in reversed(path):
+                print(g_score[pos] - g_score[current.pods])
+                current.pods = pos
+                current.moved_pods = came_from[pos][1]
                 print(current.render())
-            return cost
+            return _cost
 
-        # I render the first state which has more sorted to keep track of 
+        # I render the first state which has more sorted to keep track of
         # the progress
-        current_done = sum([1 for p in range(4*pods_per_type) if current.is_done(p)])
+        current_done = sum([1 for p in range(4*PODS_PER_TYPE) if current.is_done(p)])
         if current_done > max_done:
             print(current.render())
             max_done = current_done
 
-        for cost, new_state in get_moves(current):
+        for _cost, new_state in get_moves(current):
             if new_state.pods in closed_set:
                 continue
 
-            tentative_gScore = gScore[current.pods] + cost
-            if tentative_gScore < gScore[new_state.pods]:
+            tentative_g_score = g_score[current.pods] + _cost
+            if tentative_g_score < g_score[new_state.pods]:
                 # this is the better move
                 came_from[new_state.pods] = (current.pods, new_state.moved_pods)
-                gScore[new_state.pods] = tentative_gScore
-                fScore[new_state.pods] = tentative_gScore + h_func(new_state)
-                open_set.put(PrioritizedState(fScore[new_state.pods], new_state))
-    
+                g_score[new_state.pods] = tentative_g_score
+                f_score[new_state.pods] = tentative_g_score + h_func(new_state)
+                open_set.put(PrioritizedState(f_score[new_state.pods], new_state))
+
 def make_part2(filename):
     extra = ["  #D#C#B#A#","  #D#B#A#C#"]
-    with open(filename, "r") as file:
+    with open(filename, "r", encoding="utf-8") as file:
         lines = file.readlines()
         return __parse_input__(lines[:3] + extra + lines[3:])
 
-import sys
 if __name__ == '__main__':
-    input = sys.argv[1] if len(sys.argv) > 1 else "input23_test.txt" 
-    part1 = parse_input(input)
+    INPUT_FILE = sys.argv[1] if len(sys.argv) > 1 else "input23_test.txt"
+    part1 = parse_input(INPUT_FILE)
     cost = find_best_path(part1)
     print(f"What is the least energy required to organize the amphipods? {cost}\n")
 
-    part2 = make_part2(input)
+    part2 = make_part2(INPUT_FILE)
     cost = find_best_path(part2)
     print(f"What is the least energy required to organize the amphipods? {cost}")
-
