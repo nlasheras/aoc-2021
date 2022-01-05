@@ -82,7 +82,6 @@ def deduct_pattern(inputs):
 
     class SignalPattern:
         """Helper class that contains the deducted masks and can be used to decode entries"""
-        # pylint: disable=too-few-public-methods
         def __init__(self, masks):
             self.number_masks = masks
 
@@ -124,7 +123,7 @@ def deduct_bf(numbers):
         if not_found(c+d+f+g+e+b): continue # 6
         if not_found(c+e+f+a+b+d): continue # 9
 
-        class SignalPattern: # pylint: disable=too-few-public-methods
+        class SignalPattern:
             """Use same API than other version of deduct_pattern"""
             def __init__(self, a,b,c,d,e,f,g): # pylint: disable=too-many-arguments
                 self.dict = {}
