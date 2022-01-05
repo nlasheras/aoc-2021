@@ -1,50 +1,66 @@
-# https://adventofcode.com/2021/day/18
+"""" https://adventofcode.com/2021/day/18 """
+
+from copy import copy
+from functools import reduce
+from itertools import permutations
+from typing import List
+import math
 
 class TreeNode:
+    """I will model the snailfish numbers as a tree"""
     def __init__(self, parent = None, value = None):
         self.parent = parent
         self.left = None
         self.right = None
         self.value = value
-        self.__num_leaves = -1
+        self.__num_leaves = None
 
     def is_tree(self):
-        return self.left and self.right
+        """Leaf nodes only use the value property"""
+        return self.left or self.right
 
     def __repr__(self) -> str:
-        if self.left and self.right: return f"[{self.left},{self.right}]"
-        else: return str(self.value) # leaf node
+        if self.is_tree():
+            return f"[{self.left},{self.right}]"
+        return str(self.value) # leaf node
 
     def __copy__(self):
-        n = TreeNode()
+        copied = TreeNode()
         if self.right:
-            n.right = copy(self.right)
-            n.right.parent = n
+            copied.right = copy(self.right)
+            copied.right.parent = copied
         if self.left:
-            n.left = copy(self.left)
-            n.left.parent = n
-        n.value = self.value
-        return n
+            copied.left = copy(self.left)
+            copied.left.parent = copied
+        copied.value = self.value
+        return copied
 
     def depth(self):
-        if self.left and self.right: return 1 + max(self.left.depth(), self.right.depth())
-        else: return 0
+        if self.left and self.right:
+            return 1 + max(self.left.depth(), self.right.depth())
+        return 0
 
     def swap(self, old, new):
+        """Swap one of the branches of the node by another tree"""
         new.parent = self
-        if self.right == old: self.right = new
-        elif self.left == old: self.left = new
+        if self.right == old:
+            self.right = new
+        elif self.left == old:
+            self.left = new
         self.__invalidate_count__()
 
     def is_root(self):
         return self.parent is None
 
     def get_root(self):
-        if self.is_root(): return self
-        else: return self.parent.get_root()
+        if self.is_root():
+            return self
+        return self.parent.get_root()
 
     def num_leaves(self):
-        if self.__num_leaves == -1:
+        """This method memoizes the count since its a heavily used method to traverse
+        the tree"""
+        if self.__num_leaves is None:
             self.__num_leaves = self.__count_leaves__()
         return self.__num_leaves
 
@@ -54,127 +70,155 @@ class TreeNode:
         return self.left.num_leaves() + self.right.num_leaves()
 
     def __invalidate_count__(self):
-        self.__num_leaves = -1
-        if self.parent: self.parent.__invalidate_count__()
+        self.__num_leaves = None
+        # when a node memoization gets invalidated, we need to invalidate up until
+        # the root
+        if self.parent:
+            self.parent.__invalidate_count__()
 
-    def get_idx(self, target):
-        assert(not target.is_tree())
+    def get_idx(self):
+        """Gets the index of a given leaf node. That index is equal to the amount of
+        leaves it has to the left from the root node"""
+        assert not self.is_tree() # only leaf nodes have index
         idx = 0
-        current = target
-        while (current.parent != None):
+        current = self
+        while current.parent:
             if current == current.parent.right:
                 idx += current.parent.left.num_leaves()
             current = current.parent
         return idx
 
     def get_node_by_idx(self, target_idx):
+        """Traverse the tree and get a given node. If node doesn't exist return None.
+        This is useful to allow accessing nodes -1 or n+1"""
         if not self.is_tree():
-            if target_idx == 0: return self
-            else: return None
+            if target_idx == 0:
+                return self
+            return None
+
         left_count = self.left.num_leaves()
         if target_idx >= left_count:
             return self.right.get_node_by_idx(target_idx - left_count)
-        else:
-            return self.left.get_node_by_idx(target_idx)
+        return self.left.get_node_by_idx(target_idx)
 
-def parse_numbers(string):
+def parse_numbers(input_string) -> List[TreeNode]:
     def __parse_recursive__(string):
         count = 0
         if string[count] == '[':
-            t = TreeNode()
-            v, parsed_count = __parse_recursive__(string[1:])
+            # tree node, parse left and then the right branch
+            tree = TreeNode()
+            tree.left, parsed_count = __parse_recursive__(string[1:])
             count += parsed_count + 1
+            assert string[count] == ','
             if string[count] == ",":
-                t.left = v
-                t.right, parsed_count = __parse_recursive__(string[count+1:])
-                count += parsed_count + 1
+                tree.right, parsed_count = __parse_recursive__(string[count+1:])
+                count += parsed_count + 1 # skip also the ','
+            assert string[count] == ']'
             if string[count] == ']':
                 count += 1
-            t.left.parent = t
-            t.right.parent = t
-            return t, count
+            # set parent to the parsed branches
+            tree.left.parent = tree
+            tree.right.parent = tree
+            return tree, count
         else:
-            t = TreeNode()
-            t.value = 0
-            c = string[count]
-            if c.isdigit():
-                t.value = t.value*10 + int(c)
+            # parse the number as a leaf node
+            tree = TreeNode()
+            tree.value = 0
+            while string[count].isdigit():
+                tree.value = tree.value*10 + int(string[count])
                 count += 1
-            return t, count
-    ret, parsed = __parse_recursive__(string)
-    assert(parsed == len(string))
+            return tree, count
+    ret, parsed_chars = __parse_recursive__(input_string)
+    assert parsed_chars == len(input_string)
     return ret
 
-def add_nodes(n1: TreeNode, n2: TreeNode):
-    t = TreeNode()
-    t.left = n1
-    t.left.parent = t
-    t.right = n2
-    t.right.parent = t
-    return t
+def add_nodes(node1: TreeNode, node2: TreeNode):
+    """The sum of two trees is a new tree where each tree is one of the
+    branches"""
+    sum_node = TreeNode()
+    sum_node.left = copy(node1)
+    sum_node.left.parent = sum_node
+    sum_node.right = copy(node2)
+    sum_node.right.parent = sum_node
+    return sum_node
 
-def explode(t, depth = 0):
-    if t.left and explode(t.left, depth + 1):
+def explode(tree, depth = 0):
+    """Keep exploding the numbers from the left to the right. When exploding
+    the left value is added to the node to the left and the right value is
+    added to the node to the right. The exploded node is replaced by a leaf
+    node with value 0"""
+    if tree.left and explode(tree.left, depth + 1):
         return True
-    if depth == 4 and t.is_tree():
-        old = t
-        root = t.get_root()
-        left_idx = root.get_idx(t.left)
-        left_node = root.get_node_by_idx(left_idx - 1)
+    if depth == 4 and tree.is_tree():
+        # when exploding we a node we require two leaf nodes
+        assert not tree.left.is_tree()
+        assert not tree.right.is_tree()
+        exploded = tree
+        root = tree.get_root()
 
-        if left_node: left_node.value += t.left.value
-        right_node = root.get_node_by_idx(left_idx + 2)
-        if right_node: right_node.value += t.right.value
-        new = TreeNode(old.parent, 0)
-        t.parent.swap(old, new)
+        left_leaf_idx = tree.left.get_idx()
+        if left_node := root.get_node_by_idx(left_leaf_idx - 1):
+            left_node.value += tree.left.value
+
+        if right_node := root.get_node_by_idx(left_leaf_idx + 2):
+            right_node.value += tree.right.value
+
+        new = TreeNode(exploded.parent, 0)
+        exploded.parent.swap(exploded, new)
         return True
-    if t.right and explode(t.right, depth + 1):
+    if tree.right and explode(tree.right, depth + 1):
         return True
     return False
 
-import math
-def split(t):
-    if t.left and split(t.left): return True
-    if t.value and t.value >= 10:
-        split_node = TreeNode()
-        split_node.left = TreeNode(split_node, math.floor(t.value / 2))
-        split_node.right = TreeNode(split_node, math.ceil(t.value / 2))
-        t.parent.swap(t, split_node)
+def split(tree):
+    """When a regular number is bigger than 10 we replace it with a new Tree where
+    the left one is the half rounded down and the right one the half rounding up"""
+    if tree.left and split(tree.left):
         return True
-    if t.right and split(t.right): return True
+    if tree.value and tree.value >= 10:
+        split_node = TreeNode()
+        split_node.left = TreeNode(split_node, math.floor(tree.value / 2))
+        split_node.right = TreeNode(split_node, math.ceil(tree.value / 2))
+        tree.parent.swap(tree, split_node)
+        return True
+    if tree.right and split(tree.right):
+        return True
+    return False
 
-def magnitude(t):
-    if t.is_tree(): return 3*magnitude(t.left) + 2*magnitude(t.right)
-    else: return t.value
+def magnitude(tree):
+    if tree.is_tree():
+        return 3*magnitude(tree.left) + 2*magnitude(tree.right)
+    return tree.value
 
-from copy import copy
-def snailfish_add(n1, n2):
-    result = add_nodes(copy(n1), copy(n2))
-    should_continue = True
-    while should_continue:
+def snailfish_add(node1, node2):
+    result = add_nodes(node1, node2)
+    should_reduce = True
+    while should_reduce:
+        # at most one action applies, we first apply all the explode before we start spliting,
+        # and after any split we check for any split needed. We keep reducing the number until no
+        # explode and split are required
         if not explode(result):
-            should_continue = split(result)
+            should_reduce = split(result)
     return result
 
 def parse_input(filename):
-    with open(filename, "r") as file:
+    with open(filename, "r", encoding="utf-8") as file:
         return [parse_numbers(line.rstrip()) for line in file.readlines()]
 
-from functools import reduce
 def part1(filename):
     numbers = parse_input(filename)
-    sum = reduce(snailfish_add, numbers)
-    print(f"What is the magnitude of the final sum? {magnitude(sum)}")
+    final_sum = reduce(snailfish_add, numbers)
+    print(f"What is the magnitude of the final sum? {magnitude(final_sum)}")
 
-from itertools import permutations
 def part2(filename):
     numbers = parse_input(filename)
     magnitudes = map(lambda p: magnitude(snailfish_add(p[0], p[1])), permutations(numbers, 2))
     print(f"What is the largest magnitude of any sum of two different snailfish numbers from the homework assignment? {max(magnitudes)}")
 
-part1("input18_test.txt")
-part1("input18.txt")
+if __name__ == '__main__':
+    part1("input18_test.txt")
+    part1("input18.txt")
 
-print("\n", end="")
-part2("input18_test.txt")
-part2("input18.txt")
+    print("\n", end="")
+    part2("input18_test.txt")
+    part2("input18.txt")
