@@ -70,7 +70,7 @@ def part1(filename, print_path = False):
     find_path_in_grid(grid, print_path)
 
 def part2(filename, print_path = False):
-    grid = Grid(filename)
+    grid = Grid.from_file(filename)
 
     # generate the new grid
     new_rows = grid.rows * 5

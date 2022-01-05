@@ -3,23 +3,23 @@ from utils.termcolors import TermColors
 
 class Grid:
     """A grid of cells of any type"""
-    def __init__(self, filename = None, parse_cell = int):
+    def __init__(self):
         self.cells = []
-        if filename:
-            with open(filename, "r", encoding='utf-8') as file:
-                lines = [l.rstrip() for l in file.readlines()]
-                self.rows = len(lines)
-                self.cols = len(lines[0])
-                for _l in lines:
-                    self.cells += [parse_cell(c) for c in _l]
-        else:
-            self.rows = 0
-            self.cols = 0
+        self.rows = 0
+        self.cols = 0
 
     @staticmethod
     def from_file(filename, parse_cell = int):
         """Initialize a grid from a file where every cell is one character of the file"""
-        return Grid(filename, parse_cell)
+        with open(filename, "r", encoding='utf-8') as file:
+            grid = Grid()
+            lines = [l.rstrip() for l in file.readlines()]
+            grid.rows = len(lines)
+            grid.cols = len(lines[0])
+            for _l in lines:
+                grid.cells += [parse_cell(c) for c in _l]
+            return grid
+        return None
 
     @staticmethod
     def empty(cols, rows, initial_value = 0):
