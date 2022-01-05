@@ -6,14 +6,25 @@ class TreeNode:
         self.left = None
         self.right = None
         self.value = value
-        self.count = 0
+        self.__num_leaves = -1
 
     def is_tree(self):
         return self.left and self.right
-    
+
     def __repr__(self) -> str:
         if self.left and self.right: return f"[{self.left},{self.right}]"
         else: return str(self.value) # leaf node
+
+    def __copy__(self):
+        n = TreeNode()
+        if self.right:
+            n.right = copy(self.right)
+            n.right.parent = n
+        if self.left:
+            n.left = copy(self.left)
+            n.left.parent = n
+        n.value = self.value
+        return n
 
     def depth(self):
         if self.left and self.right: return 1 + max(self.left.depth(), self.right.depth())
@@ -23,6 +34,7 @@ class TreeNode:
         new.parent = self
         if self.right == old: self.right = new
         elif self.left == old: self.left = new
+        self.__invalidate_count__()
 
     def is_root(self):
         return self.parent is None
@@ -31,9 +43,19 @@ class TreeNode:
         if self.is_root(): return self
         else: return self.parent.get_root()
 
-    def count_leaves(self):
-        if not self.is_tree(): return 1
-        else: return self.left.count_leaves() + self.right.count_leaves()
+    def num_leaves(self):
+        if self.__num_leaves == -1:
+            self.__num_leaves = self.__count_leaves__()
+        return self.__num_leaves
+
+    def __count_leaves__(self):
+        if not self.is_tree():
+            return 1
+        return self.left.num_leaves() + self.right.num_leaves()
+
+    def __invalidate_count__(self):
+        self.__num_leaves = -1
+        if self.parent: self.parent.__invalidate_count__()
 
     def get_idx(self, target):
         assert(not target.is_tree())
@@ -41,7 +63,7 @@ class TreeNode:
         current = target
         while (current.parent != None):
             if current == current.parent.right:
-                idx += current.parent.left.count_leaves()
+                idx += current.parent.left.num_leaves()
             current = current.parent
         return idx
 
@@ -49,7 +71,7 @@ class TreeNode:
         if not self.is_tree():
             if target_idx == 0: return self
             else: return None
-        left_count = self.left.count_leaves()
+        left_count = self.left.num_leaves()
         if target_idx >= left_count:
             return self.right.get_node_by_idx(target_idx - left_count)
         else:
@@ -92,7 +114,7 @@ def add_nodes(n1: TreeNode, n2: TreeNode):
     return t
 
 def explode(t, depth = 0):
-    if t.left and explode(t.left, depth + 1): 
+    if t.left and explode(t.left, depth + 1):
         return True
     if depth == 4 and t.is_tree():
         old = t
@@ -117,7 +139,7 @@ def split(t):
         split_node = TreeNode()
         split_node.left = TreeNode(split_node, math.floor(t.value / 2))
         split_node.right = TreeNode(split_node, math.ceil(t.value / 2))
-        t.parent.swap(t, split_node) 
+        t.parent.swap(t, split_node)
         return True
     if t.right and split(t.right): return True
 
@@ -125,9 +147,9 @@ def magnitude(t):
     if t.is_tree(): return 3*magnitude(t.left) + 2*magnitude(t.right)
     else: return t.value
 
-from copy import deepcopy
+from copy import copy
 def snailfish_add(n1, n2):
-    result = add_nodes(deepcopy(n1), deepcopy(n2))
+    result = add_nodes(copy(n1), copy(n2))
     should_continue = True
     while should_continue:
         if not explode(result):
@@ -149,7 +171,7 @@ def part2(filename):
     numbers = parse_input(filename)
     magnitudes = map(lambda p: magnitude(snailfish_add(p[0], p[1])), permutations(numbers, 2))
     print(f"What is the largest magnitude of any sum of two different snailfish numbers from the homework assignment? {max(magnitudes)}")
-    
+
 part1("input18_test.txt")
 part1("input18.txt")
 
